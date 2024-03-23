@@ -1,0 +1,33 @@
+/* Navbar.css */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    color: black;
+    font-size: 20px;
+    padding: 20px;
+    border-bottom: none;
+  }
+  
+  .navbar .navbar-right {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .navbar .navbar-link {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+  }
+  
+  .navbar .navbar-left {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+  }
+  
+  .content {
+    padding: 20px;
+  }
+  
