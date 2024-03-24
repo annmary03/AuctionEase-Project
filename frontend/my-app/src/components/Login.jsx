@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
 
 const Login = ({ setLoginUser }) => {
   const navigate = useNavigate();
@@ -23,20 +24,24 @@ const Login = ({ setLoginUser }) => {
   };
 
   const handleLogin = () => {
-    if (user.email === 'admin@gmail.com' && user.password === 'admin@123') {
+    if (user.email === 'auctioneaseplatform@gmail.com' && user.password === 'admin@123') {
       // If the login is for admin
       navigate('/Admin');
     } else {
       axios
         .post('http://localhost:9002/login', user)
         .then((res) => {
-          const { message, user: loggedInUser, blocked } = res.data;
+          const { message, token, blocked } = res.data;
           if (blocked) {
             alert("Can't login. User is blocked.");
           } else {
             alert(message);
-            setLoginUser(loggedInUser);
-            navigate('/dashboard');
+          // Store token in local storage
+          localStorage.setItem('token', token);
+          // Decode the token to get user information
+          const decodedToken = jwt_decode(token);
+          setLoginUser(decodedToken);
+          navigate('/Home');
           }
         })
         .catch((error) => {

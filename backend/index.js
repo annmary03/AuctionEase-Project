@@ -5,9 +5,9 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-
+const jwt = require('jsonwebtoken');
 const app = express();
-
+require('dotenv').config()
 // Connect to MongoDB (replace this URI with your actual MongoDB URI)
 mongoose.connect(process.env.MONGODB_URI || `mongodb+srv://annmarywilson293:TbeQEJ2MVGPIc0DY@cluster0.iggvkd2.mongodb.net/?retryWrites=true&w=majority`, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -80,26 +80,24 @@ app.post('/api/signup', async (req, res) => {
 
 // Login endpoint
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  // Check if user with provided email exists in the database
-  User.findOne({ email }, (err, user) => {
-    if (err) {
-      return res.status(500).send(err);
-    }
-
+    const { email, password } = req.body;
+  
+    // Check if user exists
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Email does not exist' });
     }
-
-    // Now, verify the password
+  
+    // Validate password
     if (user.password !== password) {
       return res.status(401).json({ message: 'Incorrect password' });
     }
-
-    return res.status(200).json({ message: 'Login successful' });
+  
+    // Generate JWT
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  
+    res.json({ token });
   });
-});
 
 // Forgot password endpoint
 app.post('/api/forgotPassword', async (req, res) => {
@@ -147,7 +145,7 @@ app.post('/api/forgotPassword', async (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 9002;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
