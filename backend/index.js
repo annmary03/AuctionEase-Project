@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const app = express();
 const jwt = require('jsonwebtoken');
@@ -90,49 +91,63 @@ app.post('/api/login', async (req, res) => {
   res.status(200).json({ message: 'Login successful!' ,token:token});
 });
 
-const sendForgotPasswordEmail = async (email, newPassword) => {
+// Forgot password endpoint
+app.post('/api/forgotpassword', async (req, res) => {
+    const { email } = req.body;
     
+    try {
+        const newPassword = generateNewPassword();
+      // Call the sendForgotPasswordEmail function
+      await sendForgotPasswordEmail(email,newPassword);
   
-    try{ 
-    // Check if the email exists in the database
-    const user = await User.findOne({ email });
-  
-    if (!user) {
-      return res.status(404).json({ message: 'Email not found' });
+      res.status(200).json({ message: 'Email sent successfully' });
+    } catch (error) {
+      console.error('Error sending forgot password email:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
+  });
   
-    // Generate a new password (you may want to use a library like `crypto` for more security)
-    const newPassword = crypto.randomBytes(8).toString('hex'); // Implement this function
+  const generateNewPassword = () => {
+    const randomBytes = crypto.randomBytes(8);
+    return randomBytes.toString('hex');
+  };
+const sendForgotPasswordEmail = async (email,newPassword) => {
+    try {
+      // Check if the email exists in the database
+      const user = await User.findOne({ email });
   
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-  
-    // Update the user's password in the database
-    user.password = newPassword;
-    await user.save();
-    sendForgotPasswordEmail(email, newPassword);
-    // Send an email with the new password
-    const mailOptions = {
-      from: 'auctioneaseplatform.com', // Sender email address
-      to: email,
-      subject: 'Password Reset',
-      text: `Dear user, we have received a forgot password request for your account. Your new password is: ${newPassword} Please do not share your password with anyone. We thank you for using our Online Auction System AuctionEase.`,
-    };
-  
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+      if (!user) {
+        console.error('Email not found');
+        return;
       }
   
-      console.log('Email sent:', info.response);
-      return res.status(200).json({ message: 'Email sent successfully' });
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      // Update the user's password in the database
+      user.password = hashedPassword;
+      await user.save();
+  
+      const mailOptions = {
+        from: 'auctioneaseplatform.com', // Sender email address
+        to: email,
+        subject: 'Password Reset',
+        text: `Dear user, we have received a forgot password request for your account. Your new password is: ${newPassword} Please do not share your password with anyone. We thank you for using our Online Auction System AuctionEase.`,
+      };
+  
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error sending email:', error);
+          return;
+        }
+  
+        console.log('Email sent:', info.response);
+      });
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
+  
 
   const sendWelcomeEmail = (email) => {
     const mailOptions = {

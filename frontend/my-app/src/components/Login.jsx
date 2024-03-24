@@ -50,7 +50,36 @@ const Login = ({ setLoginUser }) => {
           });
       }
     };
-  
+    
+    const handleForgotPassword = () => {
+        const newPassword = generateRandomPassword(12);
+        axios
+          .post('http://localhost:9002/api/forgotpassword', { email: user.email ,newPassword})
+          .then((res) => {
+            alert(res.data.message); // Alert message from the backend
+          })
+          .catch((error) => {
+            if (error.response && error.response.data) {
+              alert(error.response.data.message); // Error message from the backend
+            } else {
+              console.log('Error sending forgot password request:', error);
+            }
+          });
+      };
+
+
+      const generateRandomPassword = (length) => {
+        const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let password = '';
+        for (let i = 0; i < length; i++) {
+          const randomIndex = Math.floor(Math.random() * charset.length);
+          password += charset[randomIndex];
+        }
+        return password;
+      };
+      
+      
+      
     return (
       <div className="login-container">
         <div className="login-left">
@@ -84,9 +113,10 @@ const Login = ({ setLoginUser }) => {
               />
             </div>
             <div className="forgot-password">
-              <a href="/forgotpassword" className="black-link">
-                Forgot Password?
-              </a>
+            <button type="button" className="black-link" onClick={handleForgotPassword}>
+                        Forgot Password?
+                    </button>
+
             </div>
             <br />
             <button type="button" className="login-button" onClick={handleLogin}>
@@ -96,7 +126,7 @@ const Login = ({ setLoginUser }) => {
           <div className="signup-link">
             <span>Don't have an account?</span>
             <Link to="/SignUp" className="black-link">
-              Sign up for free
+                        Sign up for free
             </Link>
           </div>
         </div>
