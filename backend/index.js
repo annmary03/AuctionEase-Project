@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const app = express();
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 app.use(cors());
 
@@ -53,6 +54,7 @@ app.post('/api/signup', async (req, res) => {
 
     // Save the new user
     await newUser.save();
+    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({ message: 'User successfully registered!' });
   } catch (error) {
@@ -76,7 +78,7 @@ app.post('/api/login', async (req, res) => {
   if (!passwordMatch) {
     return res.status(401).json({ message: 'Incorrect password' });
   }
-
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.status(200).json({ message: 'Login successful!' });
 });
 
