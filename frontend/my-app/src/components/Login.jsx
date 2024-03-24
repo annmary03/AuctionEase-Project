@@ -5,9 +5,6 @@ import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-const jwt_decode = require("jwt-decode");
-
-
 const Login = ({ setLoginUser }) => {
     const navigate = useNavigate();
   
@@ -30,7 +27,7 @@ const Login = ({ setLoginUser }) => {
         navigate('/Admin');
       } else {
         axios
-          .post('http://localhost:9002/login', user)
+          .post('http://localhost:9002/api/login', user)
           .then((res) => {
             const { message, token, blocked } = res.data;
             if (blocked) {
@@ -39,9 +36,7 @@ const Login = ({ setLoginUser }) => {
               alert(message);
               // Store token in local storage
               localStorage.setItem('token', token);
-              // Decode the token to get user information
-              const decodedToken = jwt_decode(token);
-              setLoginUser(decodedToken);
+              // Redirect to home page
               navigate('/Home');
             }
           })
@@ -56,56 +51,56 @@ const Login = ({ setLoginUser }) => {
     };
   
     return (
-    <div className="login-container">
-      <div className="login-left">
-        <img src={Logb} alt="Logo" className="login-logo" />
-      </div>
-      <div className="login-right">
-        <h2>Login</h2>
-        <h4>Welcome Back! Please enter your details.</h4>
-        <form>
-          <div className="form-group">
-            <TextField
-              label="Email"
-              variant="standard"
-              name="email"
-              placeholder="Email"
-              value={user.email}
-              onChange={handleChange}
-              required
-            />
+      <div className="login-container">
+        <div className="login-left">
+          <img src={Logb} alt="Logo" className="login-logo" />
+        </div>
+        <div className="login-right">
+          <h2>Login</h2>
+          <h4>Welcome Back! Please enter your details.</h4>
+          <form>
+            <div className="form-group">
+              <TextField
+                label="Email"
+                variant="standard"
+                name="email"
+                placeholder="Email"
+                value={user.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <TextField
+                label="Password"
+                variant="standard"
+                name="password"
+                placeholder="Password"
+                type="password"
+                value={user.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="forgot-password">
+              <a href="/forgotpassword" className="black-link">
+                Forgot Password?
+              </a>
+            </div>
+            <br />
+            <button type="button" className="login-button" onClick={handleLogin}>
+              Log in
+            </button>
+          </form>
+          <div className="signup-link">
+            <span>Don't have an account?</span>
+            <Link to="/SignUp" className="black-link">
+              Sign up for free
+            </Link>
           </div>
-          <div className="form-group">
-            <TextField
-              label="Password"
-              variant="standard"
-              name="password"
-              placeholder="Password"
-              type="password"
-              value={user.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="forgot-password">
-            <a href="/" className="black-link">
-              Forgot Password?
-            </a>
-          </div>
-          <br />
-          <button type="button" className="login-button" onClick={handleLogin}>
-            Log in
-          </button>
-        </form>
-        <div className="signup-link">
-          <span>Don't have an account?</span>
-          <Link to="/SignUp" className="black-link">
-            Sign up for free
-          </Link>
         </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default Login;

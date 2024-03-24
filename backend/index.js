@@ -1,15 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
 const app = express();
-require('dotenv').config()
-// Connect to MongoDB (replace this URI with your actual MongoDB URI)
-mongoose.connect(process.env.MONGODB_URI || `mongodb+srv://annmarywilson293:TbeQEJ2MVGPIc0DY@cluster0.iggvkd2.mongodb.net/?retryWrites=true&w=majority`, { useNewUrlParser: true, useUnifiedTopology: true });
+const cors = require('cors');
+app.use(cors());
+
+require('dotenv').config();
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI);
 
 mongoose.connection.on('connected', () => {
   console.log('Connected to MongoDB');
@@ -19,30 +19,7 @@ mongoose.connection.on('error', (err) => {
   console.error('Error connecting to MongoDB:', err);
 });
 
-const corsOptions = {
-  origin: ['http://localhost:3000'],
-  credentials: true,
-};
-
 app.use(express.json());
-app.use(cors(corsOptions));
-
-// Example middleware to set no-cache headers
-app.use((req, res, next) => {
-  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.header('Pragma', 'no-cache');
-  res.header('Expires', 0);
-  next();
-});
-
-// Nodemailer configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'auctioneaseplatform@gmail.com', // Your Gmail email address
-    pass: 'wqib pose sunz yjoz',
-  },
-});
 
 // User schema
 const userSchema = new mongoose.Schema({
@@ -57,91 +34,50 @@ const User = mongoose.model('User', userSchema);
 app.post('/api/signup', async (req, res) => {
   const { username, email, password } = req.body;
 
-  // Check if the email already exists in the database
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return res.status(409).json({ message: 'Email already exists in the database' });
-  }
-
-  // If the email doesn't exist, proceed to create a new user
-  const newUser = new User({
-    username,
-    email,
-    password
-  });
-
-  newUser.save((err, user) => {
-    if (err) {
-      return res.status(500).send(err);
+  try {
+    // Check if the email already exists in the database
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already exists in the database' });
     }
-    res.status(200).json({ message: 'User successfully registered!', user });
-  });
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user
+    const newUser = new User({
+      username:req.body.username,
+      email:req.body.email,
+      password: hashedPassword
+    });
+
+    // Save the new user
+    await newUser.save();
+
+    res.status(200).json({ message: 'User successfully registered!' });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 // Login endpoint
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-  
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Email does not exist' });
-    }
-  
-    // Validate password
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Incorrect password' });
-    }
-  
-    // Generate JWT
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  
-    res.json({ token });
-  });
+  const { email, password } = req.body;
 
-// Forgot password endpoint
-app.post('/api/forgotPassword', async (req, res) => {
-  const { email } = req.body;
-
-  try {
-    // Check if the email exists in the database
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: 'Email not found' });
-    }
-
-    // Generate a new password (you may want to use a library like `crypto` for more security)
-    const newPassword = crypto.randomBytes(8).toString('hex');
-
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update the user's password in the database
-    user.password = hashedPassword;
-    await user.save();
-
-    // Send an email with the new password
-    const mailOptions = {
-      from: 'your-email@gmail.com',
-      to: email,
-      subject: 'Password Reset',
-      text: `Dear user, we have received a forgot password request for your account. Your new password is: ${newPassword}`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-        return res.status(500).json({ message: 'Internal server error' });
-      }
-
-      console.log('Email sent:', info.response);
-      return res.status(200).json({ message: 'Email sent successfully' });
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+  // Find the user by email
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(401).json({ message: 'Email does not exist' });
   }
+
+  // Compare the passwords
+  const passwordMatch = await bcrypt.compare(password, user.password);
+  if (!passwordMatch) {
+    return res.status(401).json({ message: 'Incorrect password' });
+  }
+
+  res.status(200).json({ message: 'Login successful!' });
 });
 
 // Start the server
