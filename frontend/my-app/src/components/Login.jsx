@@ -37,6 +37,7 @@ const Login = ({ setLoginUser }) => {
               // Store token in local storage
               localStorage.setItem('token', token);
               // Redirect to home page
+              setLoginUser(true);
               navigate('/Home');
             }
           })

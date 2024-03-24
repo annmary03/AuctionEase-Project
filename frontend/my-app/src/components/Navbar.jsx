@@ -12,10 +12,10 @@ const Navbar = ({ isLoggedIn, handleLogout }) => {
         <Link to="/products" className="navbar-link">Products</Link>
         <Link to="/sell" className="navbar-link">Sell</Link>
         {isLoggedIn ? (
-          // If user is logged in, show Logout button
+          // If user is logged in, show Profile and Logout buttons
           <>
+            <Link to="/profile" className="navbar-link">Profile</Link>
             <button onClick={handleLogout} className="navbar-link">Logout</button>
-            <Link to="/login" className="navbar-link">Dashboard</Link>
           </>
         ) : (
           // If user is not logged in, show Signup and Login buttons
