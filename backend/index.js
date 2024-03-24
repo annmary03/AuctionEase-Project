@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 
@@ -82,23 +83,56 @@ app.post('/api/signup', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
-  // Check if user with provided email exists in the database
-  User.findOne({ email }, (err, user) => {
+  try {
+    // Check if user with provided email exists in the database
+    User.findOne({ email }, (err, user) => {
+      if (err) {
+        return res.status(500).send(err);
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: 'Email does not exist' });
+      }
+
+      // Verify the password
+      if (user.password !== password) {
+        return res.status(401).json({ message: 'Incorrect password' });
+      }
+
+      // If credentials are valid, generate JWT token
+      const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '1h' });
+
+      // Send the token in the response
+      res.status(200).json({ message: 'Login successful', token });
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+// Example middleware to verify JWT token
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized: No token provided' });
+  }
+
+  jwt.verify(token, 'your_secret_key', (err, decoded) => {
     if (err) {
-      return res.status(500).send(err);
+      return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
-
-    if (!user) {
-      return res.status(401).json({ message: 'Email does not exist' });
-    }
-
-    // Now, verify the password
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Incorrect password' });
-    }
-
-    return res.status(200).json({ message: 'Login successful' });
+    req.userId = decoded.userId;
+    next();
   });
+};
+
+// Example protected route
+app.get('/api/protected', verifyToken, (req, res) => {
+  res.status(200).json({ message: 'You are authorized' });
 });
 
 // Forgot password endpoint

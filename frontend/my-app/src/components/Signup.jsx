@@ -1,6 +1,7 @@
 // Signup.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './Signup.css';
 
@@ -11,6 +12,8 @@ function Signup() {
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate(); // Initialize useNavigate
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +21,10 @@ function Signup() {
       ...prevState,
       [name]: value
     }));
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(prevState => !prevState);
   };
 
   const handleSubmit = (e) => {
@@ -42,12 +49,14 @@ function Signup() {
     <div className="password-requirements">
       <p>Password must:</p>
       <ul>
-        <li>Be at least 8 characters long</li>
-        <li>Contain at least one digit</li>
-        <li>Contain at least one special character</li>
+        <li className={formData.password.length >= 12 ? 'satisfied' : ''}>Be at least 12 characters long</li>
+        <li className={/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password) ? 'satisfied' : ''}>Contain a combination of upper and lower-case letters</li>
+        <li className={/\d/.test(formData.password) ? 'satisfied' : ''}>Contain at least one digit</li>
+        <li className={/[\W_]/.test(formData.password) ? 'satisfied' : ''}>Contain at least one special character</li>
       </ul>
     </div>
   );
+  
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
 
   return (
@@ -61,6 +70,7 @@ function Signup() {
             name="username"
             value={formData.username}
             onChange={handleChange}
+            placeholder="Enter your username"
           />
         </label>
         <label className="signup-label">
@@ -71,29 +81,42 @@ function Signup() {
             name="email"
             value={formData.email}
             onChange={handleChange}
+            placeholder="Enter your email"
           />
         </label>
         <label className="signup-label">
           Password:
-          <input
-            className="signup-input"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div className="password-input-container">
+            <input
+              className="signup-input password-input"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Create a password"
+            />
+            <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
           {/* Display password requirements message */}
           {formData.password && !passwordRegex.test(formData.password) && passwordRequirementsMessage}
         </label>
         <label className="signup-label">
           Confirm Password:
-          <input
-            className="signup-input"
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-          />
+          <div className="password-input-container">
+            <input
+              className="signup-input password-input"
+              type={showPassword ? "text" : "password"}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter your password"
+            />
+            <span className="password-toggle-icon" onClick={togglePasswordVisibility}>
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
         </label>
         <button className="signup-button" type="submit">Sign up</button>
       </form>
