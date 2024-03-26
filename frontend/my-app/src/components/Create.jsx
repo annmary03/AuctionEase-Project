@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import './Create.css';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const Create = () => {
   const [product, setProduct] = useState({
@@ -11,27 +13,39 @@ const Create = () => {
     image: '' 
   });
 
+  const navigate = useNavigate(); 
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProduct({ ...product, [name]: value });
+  };
+
+  // Function to get JWT token from local storage
+  const getToken = () => {
+    return localStorage.getItem('token');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
   
     try {
-      // Fetch the logged-in user's ID or fetch it from your authentication context
-      const userId = getUserIdFromAuthentication(); // You need to implement this function
+      // Retrieve token from local storage
+        const token = getToken();
 
-      const productData = {
+      // Retrieve user ID from decoded token
+        const userId = jwtDecode(token).userId;
+
+      // Construct product data with user ID
+        const productData = {
         ...product,
-        userId: userId, // Assign the logged-in user's ID to the product data
+        userId: userId
       };
 
-      const response = await fetch('http://localhost:9002/api/addBid', {
+        const response = await fetch('http://localhost:9002/api/addBid', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Include token in the Authorization header
         },
         body: JSON.stringify(productData)
       });
@@ -50,6 +64,7 @@ const Create = () => {
         });
         // Show alert for successful addition
         alert('Product added successfully!');
+        navigate('/sell'); 
       } else {
         // Handle error
         console.error('Failed to add product:', response.statusText);
@@ -59,13 +74,6 @@ const Create = () => {
     }
   };
 
-  // Function to get user ID from authentication context or wherever it's stored
-  const getUserIdFromAuthentication = () => {
-    // You need to implement this function to get the user ID from your authentication context
-    // Example: return authContext.userId;
-    // For demonstration purposes, let's assume it's hardcoded
-    return 'user123'; // Replace this with your actual implementation
-  };
   
   return (
     <div>

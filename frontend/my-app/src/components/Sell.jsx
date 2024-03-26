@@ -12,7 +12,15 @@ const Sell = () => {
       // Fetch products data from backend API
       const fetchProducts = async () => {
         try {
-          const response = await axios.get('http://localhost:9002/api/products');
+        // Retrieve token from local storage
+          const token = localStorage.getItem('token');
+           // Send authenticated request to backend API
+           const response = await axios.get('http://localhost:9002/api/sell', {
+            headers: {
+              Authorization: `Bearer ${token}` // Include token in the Authorization header
+            }
+          });
+
           setProducts(response.data);
         } catch (error) {
           console.error('Error fetching products:', error);
@@ -22,15 +30,29 @@ const Sell = () => {
       fetchProducts();
     }, []);
 
-  const handleEdit = (productId) => {
-    // Handle edit action for the product with productId
-    console.log(`Editing product with ID ${productId}`);
-  };
-
-  const handleDelete = (productId) => {
-    // Handle delete action for the product with productId
-    console.log(`Deleting product with ID ${productId}`);
-  };
+    const handleEdit = (productId) => {
+        // Handle edit action for the product with productId
+        console.log(`Editing product with ID ${productId}`);
+      };
+    
+      const handleDelete = async (productId) => {
+        try {
+          // Retrieve token from local storage
+          const token = localStorage.getItem('token');
+    
+          // Send authenticated request to delete product
+          await axios.delete(`http://localhost:9002/api/products/${productId}`, {
+            headers: {
+              Authorization: `Bearer ${token}` // Include token in the Authorization header
+            }
+          });
+    
+          // Refresh product list after deletion
+          
+        } catch (error) {
+          console.error('Error deleting product:', error);
+        }
+      };
 
   return (
     <div className="sell-container">
