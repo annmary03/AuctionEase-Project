@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Signup.css';
 
 function Signup() {
@@ -10,21 +10,39 @@ function Signup() {
     confirmPassword: ''
   });
 
+  const [passwordRequirements, setPasswordRequirements] = useState([]);
+
+  const navigate = useNavigate();
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
       [name]: value
     }));
+  if (name === 'password') {
+    updatePasswordRequirements(value);
+  }
+};
+
+  const updatePasswordRequirements = (password) => {
+    const requirements = [
+      { text: 'At least 12 characters long', satisfied: password.length >= 12 },
+      { text: 'Contain a combination of upper and lower-case letters', satisfied: /[a-z]/.test(password) && /[A-Z]/.test(password) },
+      { text: 'Contain at least one digit', satisfied: /\d/.test(password) },
+      { text: 'Contain at least one special character', satisfied: /[@$!%*?&]/.test(password) }
+    ];
+    setPasswordRequirements(requirements);
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match. Please try again.");
       return;
     }
-  
+
     console.log("Submitting form data:", formData);
   
     // Send a POST request to the backend
@@ -48,6 +66,7 @@ function Signup() {
     .then(data => {
       console.log("Signup response:", data);
       // Navigate to login page after successful signup
+      navigate('/login');
       alert("Signup successful! You can now login with your credentials.");
     })
     .catch(error => {
@@ -91,8 +110,17 @@ function Signup() {
             value={formData.password}
             onChange={handleChange}
             placeholder="Enter your password"
-          />
-        </label>
+            />
+            {/* Display password requirements */}
+            <div className="password-requirements">
+              <p>Password must:</p>
+              <ul>
+                {passwordRequirements.map((requirement, index) => (
+                  <li key={index} className={requirement.satisfied ? 'satisfied' : ''}>{requirement.text}</li>
+                ))}
+              </ul>
+            </div>
+          </label>
         <label className="signup-label">
           Confirm Password:
           <input
