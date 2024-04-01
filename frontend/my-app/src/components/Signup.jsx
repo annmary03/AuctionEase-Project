@@ -1,5 +1,8 @@
+// Signup.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import './Signup.css';
 
 function Signup() {
@@ -7,25 +10,32 @@ function Signup() {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    agreeToTerms: false
   });
 
   const [passwordRequirements, setPasswordRequirements] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const inputValue = type === 'checkbox' ? checked : value;
+    
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: inputValue
     }));
-  if (name === 'password') {
-    updatePasswordRequirements(value);
-  }
-};
+
+    if (name === 'password') {
+      updatePasswordRequirements(value);
+    }
+  };
 
   const updatePasswordRequirements = (password) => {
     const requirements = [
+      { text: 'Password must contain' },
       { text: 'At least 12 characters long', satisfied: password.length >= 12 },
       { text: 'Contain a combination of upper and lower-case letters', satisfied: /[a-z]/.test(password) && /[A-Z]/.test(password) },
       { text: 'Contain at least one digit', satisfied: /\d/.test(password) },
@@ -33,9 +43,12 @@ function Signup() {
     ];
     setPasswordRequirements(requirements);
   };
-  
 
-  const handleSubmit = (e) => {
+  const togglePasswordVisibility = () => {
+    setShowPassword(prevState => !prevState);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -43,100 +56,126 @@ function Signup() {
       return;
     }
 
-    console.log("Submitting form data:", formData);
-  
-    // Send a POST request to the backend
-    fetch('http://localhost:9002/api/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    })
-    .then(response => {
-      if (response.status === 409) {
-        return response.json().then(data => {
-          throw new Error(data.message);
-        });
-      } else if (!response.ok) {
+    if (!formData.agreeToTerms) {
+      alert("Please agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:9002/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
         throw new Error('Error signing up. Please try again.');
       }
-      return response.json();
-    })
-    .then(data => {
+
+      const data = await response.json();
       console.log("Signup response:", data);
-      // Navigate to login page after successful signup
       navigate('/login');
       alert("Signup successful! You can now login with your credentials.");
-    })
-    .catch(error => {
+    } catch (error) {
       console.error("Error signing up:", error.message);
       alert(error.message);
-    });
+    }
   };
-  
 
   return (
-    <div className="signup-container">
-      <form className="signup-form" onSubmit={handleSubmit}>
-        <label className="signup-label">
-          Username:
-          <input
-            className="signup-input"
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Enter your username"
-          />
-        </label>
-        <label className="signup-label">
-          Email:
-          <input
-            className="signup-input"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-          />
-        </label>
-        <label className="signup-label">
-          Password:
-          <input
-            className="signup-input"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            />
-            {/* Display password requirements */}
-            <div className="password-requirements">
-              <p>Password must:</p>
-              <ul>
-                {passwordRequirements.map((requirement, index) => (
-                  <li key={index} className={requirement.satisfied ? 'satisfied' : ''}>{requirement.text}</li>
-                ))}
-              </ul>
+    <div>
+      <div className="signup-container">
+        <div className="left-panel">
+          <h2>Create an Account</h2>
+          <p>Sign up to access exclusive features!</p>
+        </div>
+        <div className="right-panel">
+          <form className="signup-form" onSubmit={handleSubmit}>
+            <label className="signup-label">
+              Username:
+              <input
+                className="signup-input"
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Enter your username"
+              />
+            </label>
+            <label className="signup-label">
+              Email:
+              <input
+                className="signup-input"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+              />
+            </label>
+            <label className="signup-label">
+              Password:
+              <div className="password-input-container">
+                <input
+                  className="signup-input password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Password"
+                />
+                <span className="show-password" onClick={togglePasswordVisibility}>
+                  {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </span>
+              </div>
+              {/* Display password requirements */}
+              <div className="password-requirements">
+                <ul>
+                  {passwordRequirements.map((requirement, index) => (
+                    <li key={index} className={requirement.satisfied ? 'satisfied' : ''}>{requirement.text}</li>
+                  ))}
+                </ul>
+              </div>
+            </label>
+            <label className="signup-label">
+              Confirm Password:
+              <div className="password-input-container">
+                <input
+                  className="signup-input password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm Password"
+                />
+                <span className="show-password" onClick={togglePasswordVisibility}>
+                  {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </span>
+              </div>
+            </label>
+            <div className="terms-checkbox">
+              <input type="checkbox" id="agreeToTerms" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} />
+              <label htmlFor="agreeToTerms">I agree to the Terms of Service and Privacy Policy.</label>
             </div>
-          </label>
-        <label className="signup-label">
-          Confirm Password:
-          <input
-            className="signup-input"
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm your password"
-          />
-        </label>
-        <button className="signup-button" type="submit">Sign up</button>
-      </form>
-      <div className="signup-login-link">
-        Already have an account? <Link to="/login">Login</Link>
+            <button className="signup-button" type="submit">Create Account</button>
+          </form>
+          <div className="login-link">
+            Already have an account? <Link to="/login">Log in</Link>
+          </div>
+        </div>
       </div>
+      <footer className="footer">
+        <div className="footer-content">
+          <p>© 2024 Auctionease, Inc.</p>
+          <ul>
+            <li><Link to="/contact">Contact</Link></li>
+            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
+            <li><Link to="/terms-and-conditions">Terms & Conditions</Link></li>
+          </ul>
+        </div>
+      </footer>
     </div>
   );
 }
