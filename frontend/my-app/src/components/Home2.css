@@ -1,0 +1,69 @@
+body {
+  background-image: url('../assets/p.png'); /* Example path */
+  background-size: cover; 
+}
+.home-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.card {
+  width: 4000px; /* Adjust width as needed */
+  max-width: 4000px; /* Set maximum width for responsiveness */
+  height: 800px; /* Adjust height as needed */
+  background-color: #faf7f7;
+  border-radius: 10px;
+  overflow: hidden; /* Hide overflowing content */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /*background-image: url('pngtree-vibrant-dark-purple-and-red-abstract-art-background-a-soft-gradient-image_13715741.png'); /* Use local image path */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-content {
+  text-align:center;
+  padding-bottom: 250px;
+}
+
+.write2 {
+  font-size: 4rem;
+}
+
+.write1 {
+  font-size: 2rem;
+}
+
+.write {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.bu {
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 2rem;
+}
+
+.but:hover {
+  background-color: transparent; /* Darken background color on hover */
+}
+
+.navbar-link {
+  text-decoration: none;
+  color: black;
+  
+}
+
+.navbar-link:hover {
+  text-decoration: underline; /* Add underline on hover */
+}

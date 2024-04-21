@@ -1,88 +1,114 @@
-import React, { useState } from 'react';
+//Create.jsx
 import './Create.css';
-import { jwtDecode } from 'jwt-decode';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Cloudinary } from '@cloudinary/url-gen';
 
 const Create = () => {
+  const cld = new Cloudinary({ cloud: { cloudName: 'dk3ryoigu' } });
+  const navigate = useNavigate();
+
   const [product, setProduct] = useState({
     name: '',
-    category: '',
     description: '',
     startingBid: '',
-    endTime: '', 
-    image: '' 
+    endTime: '',
+    category: '',
+    image: null,
   });
 
-  const navigate = useNavigate(); 
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProduct({ ...product, [name]: value });
-  };
+  const [imageUrl, setUrl] = useState(null);
 
-  // Function to get JWT token from local storage
-  const getToken = () => {
-    return localStorage.getItem('token');
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'image') {
+      if (files.length > 0) {
+        UploadToCloudinary(files[0]);
+      }
+    } else {
+      setProduct({ ...product, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    
+    if (!imageUrl) {
+      console.error('Image is required');
+      return;
+    }
+  
+    const requestBody = {
+      name: product.name,
+      description: product.description,
+      startingBid: product.startingBid,
+      endTime:product.endTime, 
+      category: product.category,
+      imageUrl: imageUrl,
+    };
+  
+    const token = localStorage.getItem('token');
   
     try {
-      // Retrieve token from local storage
-        const token = getToken();
-
-      // Retrieve user ID from decoded token
-        const userId = jwtDecode(token).userId;
-
-      // Construct product data with user ID
-        const productData = {
-        ...product,
-        userId: userId
-      };
-
-        const response = await fetch('http://localhost:9002/api/addBid', {
+      const response = await fetch('http://localhost:9002/api/addBid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Include token in the Authorization header
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(productData)
+        body: JSON.stringify(requestBody),
       });
-      
+  
       if (response.ok) {
-        // Handle success
         console.log('Product added successfully!');
-        // Reset form fields after successful submission
+        navigate('/sell');
+
         setProduct({
           name: '',
-          category: '',
           description: '',
           startingBid: '',
           endTime: '',
-          image: ' '
+          category: '',
+          image: null,
         });
-        // Show alert for successful addition
         alert('Product added successfully!');
-        navigate('/sell'); 
       } else {
-        // Handle error
         console.error('Failed to add product:', response.statusText);
       }
     } catch (error) {
       console.error('Error adding product:', error);
     }
   };
-
   
+  const UploadToCloudinary = (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'ml_default');
+    formData.append('cloud_name', 'dk3ryoigu');
+
+    fetch('https://api.cloudinary.com/v1_1/dk3ryoigu/image/upload', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUrl(data.secure_url);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
   return (
-    <div>
-      <h2>Add Product</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="create-container">
+      <h2 className="create-heading">Add Product</h2>
+      <form className="create-form" onSubmit={handleSubmit}>
         <div>
-          <label>Name:</label>
+          <label htmlFor="name">Name:</label>
           <input
             type="text"
+            id="name"
             name="name"
             value={product.name}
             onChange={handleChange}
@@ -90,8 +116,45 @@ const Create = () => {
           />
         </div>
         <div>
-          <label>Category:</label>
-          <select
+          <label htmlFor="description">Description:</label>
+          <textarea
+            id="description"
+            name="description"
+            value={product.description}
+            onChange={handleChange}
+            required
+          ></textarea>
+        </div>
+        <div>
+          <label htmlFor="startingBid">Starting Bid:</label>
+          <input
+            type="number"
+            id="startingBid"
+            name="startingBid"
+            value={product.startingBid}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="endTime">End Time:</label>
+          <input
+  type="datetime-local"
+  id="endTime"
+  name="endTime"
+  value={product.endTime}
+  onChange={handleChange}
+  required
+/>
+
+
+
+
+        </div>
+        <div>
+        <label htmlFor="category">Category:</label>
+        <select
+            id="category"
             name="category"
             value={product.category}
             onChange={handleChange}
@@ -101,43 +164,17 @@ const Create = () => {
             <option value="Electronics">Electronics</option>
             <option value="Clothing">Clothing</option>
             <option value="Books">Books</option>
+            <option value="Home & Garden">Home & Garden</option>
+            <option value="Art">Art</option>  
             {/* Add more options as needed */}
           </select>
         </div>
         <div>
-          <label>Description:</label>
-          <textarea
-            name="description"
-            value={product.description}
-            onChange={handleChange}
-            required
-          ></textarea>
-        </div>
-        <div>
-          <label>Starting Bid:</label>
-          <input
-            type="number"
-            name="startingBid"
-            value={product.startingBid}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>End Time:</label>
-          <input
-            type="datetime-local"
-            name="endTime"
-            value={product.endTime}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Item Image:</label>
+          <label htmlFor="image">Image:</label>
           <input
             type="file"
             accept="image/*"
+            id="image"
             name="image"
             onChange={handleChange}
             required

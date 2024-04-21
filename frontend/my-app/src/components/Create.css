@@ -1,21 +1,22 @@
 /* Create.css */
 
 .create-container {
-  width: 400px;
-  margin: 0 auto;
+  width: 600px; /* Increased width */
+  margin: 80px auto 0; /* Adjusted margin to leave space from the top for navbar */
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 .create-heading {
   font-size: 24px;
   margin-bottom: 20px;
-}
-
-.create-form {
-  display: flex;
-  flex-direction: column;
+  text-align: center;
 }
 
 .create-form label {
+  display: block;
+  font-size: 16px;
   margin-bottom: 5px;
 }
 
@@ -30,7 +31,8 @@
 }
 
 .create-form button {
-  padding: 10px 20px;
+  width: 100%;
+  padding: 10px;
   background-color: #007bff;
   color: #fff;
   border: none;

@@ -1,0 +1,46 @@
+
+
+.image {
+    padding-left: 200px;
+}
+
+.images-container {
+    margin-right: 100px; /* Push the image to the right */
+}
+
+.images {
+    
+    object-fit: cover;
+    
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+ 
+   .write{
+     color:black;
+     font-weight:bold;
+     margin-top: 3rem;
+   }
+ 
+   .write1{
+     color:rgb(68, 73, 73);
+     margin-top: -1rem;
+   }
+   .write2{
+     color:black;
+     font-weight:bold;
+   }
+   .but{
+     border-color: whitesmoke;
+     border-radius: 7px;
+     background-color: transparent;
+     width: 75px;
+     height: 27px;
+   }
+   .images-container {
+     margin-left: 1000px; /* Push the image to the right */
+   }
+   .images {
+     max-width: 500px; /* Ensure image does not exceed container width */
+   }

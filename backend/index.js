@@ -1,3 +1,4 @@
+//Backend/index.js
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -5,6 +6,10 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const app = express();
+
+const cloudinary = require('cloudinary').v2;
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 app.use(cors());
@@ -28,10 +33,48 @@ app.use(express.json());
 const userSchema = new mongoose.Schema({
   username: String,
   email: String,
-  password: String
+  password: String,
+  status: {
+    type: String,
+    enum: ['blocked', 'unblocked'],
+    required: true,
+    default: 'unblocked',
+  },
 });
 
+// Bids schema
+const bidsSchema = new mongoose.Schema({
+  name: String,
+  category: String, // Category of the bid
+  description: String,
+  startingBid: Number,
+  currentBid: { type: Number, default: this.startingBid }, // Initially set to starting bid
+  endTime: Date,
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  imageUrl: String // URL of the uploaded image
+});
+
+const Bid = mongoose.model('Bid', bidsSchema);
+
 const User = mongoose.model('User', userSchema);
+
+const userbidsSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bid' },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to the user who placed the bid
+  bidAmount: Number,
+  isWinningBid: { type: Boolean, default: true },
+  timestamp: { type: Date, default: Date.now },
+});
+
+const Userbid = mongoose.model('Userbid', userbidsSchema);
+
+cloudinary.config({
+  cloud_name: 'dk3ryoigu',
+  api_key: '558444457372669',
+  api_secret: 'yFYHAaS6HTJL6SwhxElLW7rOPPs'
+});
+
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -49,7 +92,7 @@ app.post('/api/signup', async (req, res) => {
     if (existingUser) {
       return res.status(409).json({ message: 'Email already exists in the database' });
     }
-
+   
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -63,7 +106,7 @@ app.post('/api/signup', async (req, res) => {
     // Save the new user
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
+    await sendWelcomeEmail(newUser.email);
     res.status(200).json({ message: 'User successfully registered!' });
   } catch (error) {
     console.error('Error registering user:', error);
@@ -87,7 +130,7 @@ app.post('/api/login', async (req, res) => {
     return res.status(401).json({ message: 'Incorrect password' });
   }
   const token = jwt.sign({email:user.email, userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  sendWelcomeEmail(user.email);
+  
   res.status(200).json({ message: 'Login successful!' ,token:token});
 });
 
@@ -167,7 +210,362 @@ const sendForgotPasswordEmail = async (email,newPassword) => {
       return res.status(200).json({ message: 'Welcome email sent successfully' });
     });
   };
+
+// Define the endpoint for adding a bid
+app.post('/api/addBid', (req, res) => {
+  const { name, description, startingBid, endTime, category, imageUrl } = req.body;
+  console.log("Received data:", req.body);
+
+  const userId = getUserIdFromAuthentication(req);
+
+  const newBid = new Bid({
+    name,
+    description,
+    startingBid,
+    currentBid: startingBid,
+    endTime,
+    userId,
+    category,
+    imageUrl, // Store the secure URL returned by Cloudinary
+  });
+
+  newBid.save()
+    .then(savedBid => {
+      res.status(200).json({ message: 'Bid added successfully', bid: savedBid });
+    })
+    .catch(error => {
+      console.error('Error adding bid:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    });
+});
+
+
   
+  
+  const getUserIdFromAuthentication = (req) => {
+    // Extract user ID from JWT token in request headers
+    const token = req.headers.authorization.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.userId;
+  };
+
+  app.put('/api/modifyBid/:id', async (req, res) => {
+    const bidId = req.params.id;
+    const { name, description, startingBid, endTime, category, imageUrl } = req.body;
+  
+    try {
+      // Fetch the bid
+      const bid = await Bid.findById(bidId);
+  
+      if (!bid) {
+        return res.status(404).json({ message: 'Bid not found' });
+      }
+  
+      // Check if bidding has ended
+      if (bid.endTime && new Date(bid.endTime) < new Date()) {
+        return res.status(400).json({ message: 'Bidding for this product has already ended. Modification not allowed.' });
+      }
+  
+      // Update startingBid and currentBid
+      bid.name = name;
+      bid.description = description;
+      bid.startingBid = startingBid;
+      bid.currentBid = startingBid;
+      bid.endTime = endTime;
+      bid.category = category;
+      bid.imageUrl = imageUrl;
+
+      // Save the updated bid
+      const updatedBid = await bid.save();
+  
+      res.status(200).json({ message: 'Bid modified successfully', bid: updatedBid });
+    } catch (error) {
+      console.error('Error modifying bid:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+ 
+  
+const { ObjectId } = require('mongoose').Types;
+
+// Delete Bid endpoint
+app.delete('/api/deleteBid/:id', async (req, res) => {
+    const bidId = req.params.id;
+
+    try {
+        // Check if the provided ID is valid
+        if (!ObjectId.isValid(bidId)) {
+            return res.status(400).json({ message: 'Invalid bid ID' });
+        }
+
+        // Delete bid by ID
+        const deletedBid = await Bid.findByIdAndDelete(bidId);
+
+        if (!deletedBid) {
+            return res.status(404).json({ message: 'Bid not found' });
+        }
+
+        res.status(200).json({ message: 'Bid deleted successfully', bid: deletedBid });
+    } catch (error) {
+        console.error('Error deleting bid:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+  app.get('/api/sell', async (req, res) => {
+    try {
+      // Retrieve the user ID from the request or authentication context
+      const userId = getUserIdFromAuthentication(req); // You need to implement this function
+  
+      // Fetch products added by the logged-in user
+      const products = await Bid.find({ userId }).select('-userId').sort({ endTime: 'asc' });
+    
+      res.status(200).json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/productdisplay', async (req, res) => {
+    try {
+      // Retrieve the user ID from the request or authentication context
+      const userId = getUserIdFromAuthentication(req); // You need to implement this function
+  
+      // Fetch products excluding those added by the logged-in user and whose endTime has not passed
+      const products = await Bid.find({ 
+        userId: { $ne: userId },
+        endTime: { $gt: new Date() } // Filter out products with endTime greater than current time
+      }).select('-userId');
+        
+      res.status(200).json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  
+  app.get('/api/productdescription/:id', async (req, res) => {
+    try {
+      const productId = req.params.id;
+      // Fetch product details from the database based on the product ID
+      const product = await Bid.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      res.json(product);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+
+  app.get('/users', async (req, res) => {
+    try {
+      const users = await User.find({}).exec(); // Corrected const User to const users
+      res.status(200).json(users);
+    } catch (error) {
+      console.error('Error occurred while fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users', error: error.message });
+    }
+  });
+
+  app.post('/blockUser/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const user = await User.findById(userId);
+    
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+    
+      user.status = 'blocked';
+      await user.save();
+    
+      res.status(200).json({ message: 'User blocked successfully' });
+    } catch (error) {
+      console.error('Error occurred while blocking user:', error);
+      res.status(500).json({ message: 'Failed to block user', error: error.message });
+    }
+  });
+
+
+// Route to place a bid
+app.post('/api/bids/:id', async (req, res) => {
+  const productId = req.params.id;
+
+  const userId = getUserIdFromAuthentication(req);
+  if (!req.body.bidAmount || isNaN(req.body.bidAmount)) {
+    return res.status(400).json({ message: 'Invalid bid amount. Please enter a number.' });
+  }
+
+  let session; // Declare session variable outside the try-catch block
+
+  try {
+    // Start a MongoDB session
+    session = await mongoose.startSession();
+    session.startTransaction();
+
+    // Find the previous winning bid
+    const previousWinningBid = await Userbid.findOne({ productId, isWinningBid: true });
+
+    // If there's a previous winning bid, mark it as not winning anymore
+    if (previousWinningBid) {
+      previousWinningBid.isWinningBid = false;
+      await previousWinningBid.save();
+    }
+
+    // Create a new bid document
+    const newBid = new Userbid({
+      productId,
+      bidAmount: Number(req.body.bidAmount), // Accessing directly from request body
+      userId,
+      isWinningBid: true // Set isWinningBid to true for every new bid
+    });
+
+    // Save the new bid
+    const savedBid = await newBid.save();
+
+    // Update the current bid in the product document
+    const product = await Bid.findByIdAndUpdate(productId, { currentBid: savedBid.bidAmount }, { new: true }).session(session);
+
+    // Check if the auction has ended
+    const currentTime = new Date();
+    if (currentTime >= new Date(product.endTime)) {
+      // Mark the latest bid as the winning bid
+      newBid.isWinningBid = true;
+      await newBid.save();
+    }
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({ message: 'Bid added successfully', bid: savedBid });
+  } catch (error) {
+    console.error('Error adding bid:', error);
+    // If an error occurs, abort the transaction
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}); 
+
+
+
+
+// Add a new endpoint to get winning bid details for a specific product
+app.get('/api/getWinningBid/:id', async (req, res) => {
+  const productId = req.params.id;
+
+  try {
+    // Find the winning bid for the specified product
+    const winningBid = await Userbid.findOne({ productId, isWinningBid: true })
+      .select('userId bidAmount timestamp')
+      .populate('userId', 'email username');
+
+    if (!winningBid) {
+      return res.status(404).json({ message: 'No winning bid found.' });
+    }
+
+    res.status(200).json({ winningBid });
+  } catch (error) {
+    console.error('Error fetching winning bid details:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+// Endpoint to send emails to both the winning bidder and the seller after the auction ends
+app.post('/api/sendEmails/:productId', async (req, res) => {
+  const productId = req.params.productId;
+
+  try {
+    // Find the winning bid for the specified product
+    const winningBid = await Userbid.findOne({ productId, isWinningBid: true })
+      .select('userId bidAmount timestamp')
+      .populate('userId', 'email username');
+
+    if (!winningBid) {
+      return res.status(404).json({ message: 'No winning bid found.' });
+    }
+
+    // Fetch product details including userId
+    const product = await Bid.findById(productId).populate('userId', 'email username');
+
+    // Extract the seller's email from the product details
+    const sellerEmail = product.userId.email;
+    const sellerUsername = product.userId.username;
+
+    // Email to the winning bidder
+    const buyerMailOptions = {
+      from: 'auctioneaseplatform@gmail.com',
+      to: winningBid.userId.email,
+      subject: 'Congratulations! You won the bid!',
+      text: `Dear ${winningBid.userId.username},\n\nCongratulations! You have won the bid for the product. Here are the details:\n\n`
+            + `Bid Amount: ${winningBid.bidAmount}\n`
+            + `Time of Bid: ${winningBid.timestamp}\n\n`
+            + `Please proceed with the payment and contact the seller ${sellerUsername} (${sellerEmail}) for further instructions.\n\n`
+            + `Thank you for using our auction platform.\n\nBest regards,`
+    };
+
+    // Email to the seller
+    const sellerMailOptions = {
+      from: 'auctioneaseplatform@gmail.com',
+      to: sellerEmail,
+      subject: 'Your product has been sold!',
+      text: `Dear ${sellerUsername},\n\nCongratulations! Your product has been sold. Here are the details of the winning bid:\n\n`
+            + `Bid Amount: ${winningBid.bidAmount}\n`
+            + `Time of Bid: ${winningBid.timestamp}\n\n`
+            + `The winning bidder's details:\n`
+            + `Username: ${winningBid.userId.username}\n`
+            + `Email: ${winningBid.userId.email}\n\n`
+            + `Please contact the winning bidder for further arrangements.\n\n`
+            + `Thank you for using our auction platform.\n\nBest regards,`
+    };
+
+    // Send emails to both parties
+    await Promise.all([
+      transporter.sendMail(buyerMailOptions),
+      transporter.sendMail(sellerMailOptions)
+    ]);
+
+    console.log('Emails sent to winning bidder and seller.');
+    
+    res.status(200).json({ message: 'Emails sent successfully.' });
+  } catch (error) {
+    console.error('Error sending emails:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
+// GET endpoint to fetch bidding history records for a specific product ID
+app.get('/api/history/:id', async (req, res) => {
+  const productId = req.params.id;
+
+  try {
+    // Query the database for bidding history records with the provided product ID
+    const biddingHistory = await Userbid.find({ productId })
+      .select('userId bidAmount timestamp')
+      .sort({ timestamp: 'desc' })
+      .populate('userId', 'username');
+
+    res.status(200).json({ biddingHistory }); // Updated: Correctly return biddingHistory data
+  } catch (error) {
+    console.error('Error fetching bidding history:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 
 // Start the server
 const PORT = process.env.PORT || 9002;

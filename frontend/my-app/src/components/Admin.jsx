@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, TableCell, TableContainer, TableHead, TableBody, TableRow, Button } from '@mui/material';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import './Admin.css';
 
 const Admin = () => {
@@ -33,7 +34,7 @@ const Admin = () => {
         console.log('Error occurred while blocking user:', error);
       });
   };
-  
+
   const handleDeleteUser = (userId) => {
     axios
       .delete(`http://localhost:9002/delete/${userId}`)
@@ -68,6 +69,7 @@ const Admin = () => {
                 <TableCell>
                   <Button onClick={() => handleBlockUser(user._id)}>Block</Button>
                   <Button onClick={() => handleDeleteUser(user._id)}>Delete</Button>
+                  <Link to={`/viewuser/${user._id}`}><Button>View Products</Button></Link>
                 </TableCell>
               </TableRow>
             ))}

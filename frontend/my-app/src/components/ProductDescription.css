@@ -1,0 +1,245 @@
+
+  .details ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .details ul li {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  
+  .detail-label {
+    flex: 1;
+    color: #9c6b4a;
+    font-family: Work Sans, sans-serif;
+  }
+  
+  @media (max-width: 991px) {
+    .detail-label {
+      max-width: 100%;
+    }
+  }
+  
+  .detail-value {
+    flex: 1;
+    color: #1c120d;
+    font-family: Work Sans, sans-serif;
+    margin-top: 4px;
+  }
+  
+  @media (max-width: 991px) {
+    .detail-value {
+      max-width: 100%;
+    }
+  }
+
+  .bid-history {
+    margin-top: 40px;
+  }
+  
+  .bid-history h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+  
+  .bidder-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  @media (max-width: 991px) {
+    .bidder-list {
+      padding-right: 20px;
+    }
+  }
+  
+  .bidder-item {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .bidder-image {
+    width: 10px;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: center;
+  }
+  
+  .bidder-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .bidder-amount {
+    color: #1c120d;
+    font: 500 16px "Work Sans", sans-serif;
+    font-feature-settings: "dlig" on;
+    margin: 0;
+  }
+  
+  .bidder-name {
+    color: #9c6b4a;
+    font: 400 14px "Work Sans", sans-serif;
+    font-feature-settings: "dlig" on;  
+    margin: 0;
+  }
+  
+  .product-details h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  
+  .product-details p {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  
+  .bid-section {
+    margin-top: 20px;
+  }
+  
+  .bid-section input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .bid-section button {
+    padding: 10px 20px;
+    background-color: #1c120d;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .bid-section button:hover {
+    background-color: #9c6b4a;
+  }
+
+  .bidding-list {
+    list-style-type: decimal; /* Display numbers as bullets */
+    padding-left: 0; /* Remove default padding */
+  }
+  
+  .bid-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ccc;
+    padding: 5px 0;
+  }
+  
+  .user-id {
+    flex: 1;
+  }
+  
+  .amount {
+    flex: 1;
+    text-align: right;
+  }
+  
+  .time {
+    flex: 2;
+    text-align: right;
+  }
+  
+
+
+.product-description-page {
+  display: flex;
+  flex-direction: row; /* Set flex direction to row */
+  align-items: flex-start; /* Align items to the top */
+  margin-top: 40px;
+}
+
+.product-image {
+  flex:1;
+  height: 50%;
+  width: 50%;
+  }
+
+.product-image img {
+  width: 100%; /* Make sure the image fills its container */
+  height: auto; 
+}
+
+.product-details {
+  flex: 1; /* Make the product details container occupy 50% of the available space */
+  padding-left: 20px;
+}
+
+.product-details h1 {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.countdown {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.description {
+  margin-top: 20px;
+}
+
+.wishlist {
+  padding-right: 2000px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.wishlist:hover {
+  background-color: #9c2f3e;
+}
+
+
+.description {
+  margin-top: 20px;
+}
+
+
+.quantity-controls button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background-color: #ccc;
+  color: #000;
+  cursor: pointer;
+}
+
+.quantity-display {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.actions {
+  margin-top: 20px;
+}
+
+.actions button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.actions .icon {
+  margin-right: 5px;
+}
+

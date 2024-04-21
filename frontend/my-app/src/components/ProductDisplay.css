@@ -1,0 +1,118 @@
+/* ProductDisplay.css */
+
+.product-auction-container {
+    display: flex;
+    max-width: 928px;
+    flex-direction: column;
+  }
+  
+  .product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 0 20px;
+    justify-content: space-between; /* Distribute cards evenly */
+  }
+  
+  .product-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    flex: 0 1 calc(25% - 7.5px); /* Modified width for 4 cards in a row */
+    overflow: hidden;
+  }
+  
+  .product-image {
+    width: 100%;
+    height: 50%;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .product-details {
+    padding: 16px;
+  }
+  
+  .product-name {
+    font-weight: bold;
+    margin: 0;
+  }
+  
+  .product-category,
+  .product-bid,
+  .product-time {
+    margin: 8px 0;
+  }
+  
+  .searchForm {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center horizontally */
+    gap: 8px;
+    padding: 20px 8px 8px 8px; /* Adjusted padding */
+    background-color: #fcfaf7;
+    border-radius: 12px;
+    font-size: 16px;
+    line-height: 150%;
+    padding-top: 30px;
+  }
+  
+  .searchInputContainer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #9c6b4a;
+    font-weight: 400;
+    width: 70%;
+   
+  }
+  
+  .searchIcon {
+    width: 20px;
+    aspect-ratio: 1;
+    object-fit: contain;
+    object-position: center;
+  }
+  
+  .searchInput {
+    font-family: "Work Sans", sans-serif;
+    font-feature-settings: "dlig" on;
+    border: none;
+    background: transparent;
+    color: inherit;
+  }
+  
+  .searchButton {
+    padding: 12px 20px;
+    background-color: #00000060;
+    color: #fcfaf7;
+    border: none;
+    border-radius: 12px;
+    font-family: "Work Sans", sans-serif;
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.24px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  
+  .visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .view-product-button{
+    padding: 10px 20px;
+    background-color: #1c120d;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+  }

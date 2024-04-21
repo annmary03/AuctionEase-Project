@@ -1,3 +1,4 @@
+//Login.jsx
 import React, { useState } from 'react';
 import './Login.css';
 import Logb from '../assets/logb.jpg';
@@ -5,6 +6,7 @@ import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+
 const Login = ({ setLoginUser }) => {
     const navigate = useNavigate();
   
@@ -38,7 +40,7 @@ const Login = ({ setLoginUser }) => {
               localStorage.setItem('token', token);
               // Redirect to home page
               setLoginUser(true);
-              navigate('/Home');
+              navigate('/home');
             }
           })
           .catch((error) => {
@@ -52,6 +54,10 @@ const Login = ({ setLoginUser }) => {
     };
     
     const handleForgotPassword = () => {
+      if (!user.email) {
+        alert('Please enter your email');
+        return;
+      }
         const newPassword = generateRandomPassword(12);
         axios
           .post('http://localhost:9002/api/forgotpassword', { email: user.email ,newPassword})
@@ -113,7 +119,7 @@ const Login = ({ setLoginUser }) => {
               />
             </div>
             <div className="forgot-password">
-            <button type="button" className="black-link" onClick={handleForgotPassword}>
+            <button type="button" className="button-like" onClick={handleForgotPassword}>
                         Forgot Password?
                     </button>
 
