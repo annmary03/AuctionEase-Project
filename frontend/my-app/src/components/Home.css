@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Home.css file */
 .homepage {
   text-align: center;
@@ -74,3 +75,49 @@
 .home-link:hover {
   background-color: rgb(0, 128, 128);
 }
+=======
+
+/*@import '../node_modules/@syncfusion/ej2-layouts/styles/material.css';*/
+.image {
+    padding-left: 200px;
+    
+   }
+   
+   
+   .image .img {
+     height: 599px;
+     left: 0;
+     object-fit: cover;
+     position: fixed;
+     top: 0;
+     width: 1272px;
+   }
+ 
+   .write{
+     color:black;
+     font-weight:bold;
+     margin-top: 3rem;
+   }
+ 
+   .write1{
+     color:rgb(148, 187, 187);
+     margin-top: -1rem;
+   }
+   .write2{
+     color:black;
+     font-weight:bold;
+   }
+   .but{
+     border-color: whitesmoke;
+     border-radius: 7px;
+     background-color: transparent;
+     width: 75px;
+     height: 27px;
+   }
+   .images-container {
+     margin-left: 1000px; /* Push the image to the right */
+   }
+   .images {
+     max-width: 500px; /* Ensure image does not exceed container width */
+   }
+>>>>>>> 0165d16c53b05ea230d159e6031fdfa35ec15f79
