@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import './Signup.css';
+import { TextField } from '@mui/material';
+import Modal from './Modal';
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -16,6 +18,7 @@ function Signup() {
 
   const [passwordRequirements, setPasswordRequirements] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -85,99 +88,80 @@ function Signup() {
   };
 
   return (
-    <div>
-      <div className="signup-container">
-        <div className="left-panel">
-          <h2>Create an Account</h2>
-          <p>Sign up to access exclusive features!</p>
-        </div>
-        <div className="right-panel">
-          <form className="signup-form" onSubmit={handleSubmit}>
-            <label className="signup-label">
-              Username:
-              <input
-                className="signup-input"
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Enter your username"
-              />
-            </label>
-            <label className="signup-label">
-              Email:
-              <input
-                className="signup-input"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-              />
-            </label>
-            <label className="signup-label">
-              Password:
-              <div className="password-input-container">
-                <input
-                  className="signup-input password-input"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Password"
-                />
-                <span className="show-password" onClick={togglePasswordVisibility}>
-                  {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                </span>
-              </div>
-              {/* Display password requirements */}
-              <div className="password-requirements">
-                <ul>
-                  {passwordRequirements.map((requirement, index) => (
-                    <li key={index} className={requirement.satisfied ? 'satisfied' : ''}>{requirement.text}</li>
-                  ))}
-                </ul>
-              </div>
-            </label>
-            <label className="signup-label">
-              Confirm Password:
-              <div className="password-input-container">
-                <input
-                  className="signup-input password-input"
-                  type={showPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm Password"
-                />
-                <span className="show-password" onClick={togglePasswordVisibility}>
-                  {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                </span>
-              </div>
-            </label>
-            <div className="terms-checkbox">
-              <input type="checkbox" id="agreeToTerms" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} />
-              <label htmlFor="agreeToTerms">I agree to the Terms of Service and Privacy Policy.</label>
-            </div>
-            <button className="signup-button" type="submit">Create Account</button>
-          </form>
-          <div className="login-link">
-            Already have an account? <Link to="/login">Log in</Link>
+    <div className="signup-container">
+      <div className="signup-left">
+      <div className="signup-left-content">
+    <h2>Welcome to Auctionease</h2>
+    <p>Join our platform to discover amazing auctions!</p>
+  </div>
+      </div>
+      <div className="signup-right">
+        <h2>Create an Account</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="signup-form-group">
+            <TextField
+              label="Username"
+              variant="standard"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
           </div>
+          <div className="signup-form-group">
+            <TextField
+              label="Email"
+              variant="standard"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="signup-form-group">
+            <TextField
+              label="Password"
+              variant="standard"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="signup-form-group">
+            <TextField
+              label="Confirm Password"
+              variant="standard"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="signup-form-group">
+            <input
+              type="checkbox"
+              id="agreeToTerms"
+              name="agreeToTerms"
+              checked={formData.agreeToTerms}
+              onChange={handleChange}
+            />
+            <label htmlFor="agreeToTerms">
+  <a href="#" onClick={(e) => { e.preventDefault(); setIsModalOpen(true); }}>I agree to the Terms of Service and Privacy Policy.</a>
+</label>
+          </div>
+          <button type="submit" className="signup-button">Create Account</button>
+        </form>
+        <div className="signup-link">
+          Already have an account? <Link to="/login">Log in</Link>
         </div>
       </div>
-      <footer className="footer">
-        <div className="footer-content">
-          <p>© 2024 Auctionease, Inc.</p>
-          <ul>
-            <li><Link to="/contact">Contact</Link></li>
-            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-            <li><Link to="/terms-and-conditions">Terms & Conditions</Link></li>
-          </ul>
-        </div>
-      </footer>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
-}
+};
 
 export default Signup;

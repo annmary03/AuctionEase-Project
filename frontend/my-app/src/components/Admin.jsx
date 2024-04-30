@@ -27,13 +27,36 @@ const Admin = () => {
         window.alert('User blocked successfully');
         // Update the users state to reflect the change in user status
         setUsers((prevUsers) =>
-          prevUsers.map((user) => (user._id === userId ? { ...user, status: 'blocked' } : user))
+          prevUsers.map((user) =>
+            user._id === userId ? { ...user, status: 'blocked' } : user
+          )
         );
       })
       .catch((error) => {
         console.log('Error occurred while blocking user:', error);
       });
   };
+  
+  const handleUnblockUser = (userId) => {
+    axios
+      .post(`http://localhost:9002/unblockUser/${userId}`)
+      .then((res) => {
+        console.log('User unblocked successfully');
+        window.alert('User unblocked successfully');
+        // Update the users state to reflect the change in user status
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user._id === userId ? { ...user, status: 'unblocked' } : user
+          )
+        );
+      })
+      .catch((error) => {
+        console.log('Error occurred while unblocking user:', error);
+      });
+  };
+  
+
+  
 
   const handleDeleteUser = (userId) => {
     axios
@@ -50,15 +73,16 @@ const Admin = () => {
   };
 
   return (
-    <div>
-      <h6 style={{ fontSize: '30px' }}>USER DETAILS</h6>
+    <div className="admin-container">
+      <h1 className="admin-header">User Details</h1>
       <TableContainer>
-        <Table>
+        <Table className="admin-table">
           <TableHead>
             <TableRow>
-              <TableCell style={{ color: 'black', fontSize: '40px' }}>NAME</TableCell>
-              <TableCell style={{ color: 'black', fontSize: '40px' }}>EMAIL ID</TableCell>
-              <TableCell style={{ color: 'black', fontSize: '40px' }}>ACTIONS</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Email ID</TableCell>
+              <TableCell>Reports</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -66,10 +90,13 @@ const Admin = () => {
               <TableRow key={user._id}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
+                <TableCell>{user.ifreported}</TableCell>
                 <TableCell>
-                  <Button onClick={() => handleBlockUser(user._id)}>Block</Button>
+                  <Button onClick={() => user.status === 'blocked' ? handleUnblockUser(user._id) : handleBlockUser(user._id)}>
+                    {user.status === 'blocked' ? 'Unblock' : 'Block'}
+                  </Button>
                   <Button onClick={() => handleDeleteUser(user._id)}>Delete</Button>
-                  <Link to={`/viewuser/${user._id}`}><Button>View Products</Button></Link>
+                  <Link to={`/viewuser/${user._id}`} className="view-products-link"><Button>View Products</Button></Link>
                 </TableCell>
               </TableRow>
             ))}

@@ -32,6 +32,37 @@ const Countdown = () => {
   );
 };
 
+const ReportDialog = ({ isOpen, onClose, onSubmit }) => {
+  const [reason, setReason] = useState('');
+
+  const handleReasonChange = (e) => {
+    setReason(e.target.value);
+  };
+
+  const handleSubmit = () => {
+    onSubmit(reason);
+  };
+
+  return (
+    <div className={`report-dialog ${isOpen ? 'open' : ''}`}>
+      <div className="dialog-content product-details">
+        <h2>Report User</h2>
+        <textarea
+          value={reason}
+          onChange={handleReasonChange}
+          placeholder="Enter your reason for reporting this user"
+          className="description"
+        ></textarea>
+        <div className="button-container actions">
+          <button onClick={onClose}>Cancel</button>
+          <button onClick={handleSubmit}>Submit</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 const ProductDescriptionPage = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -40,21 +71,16 @@ const ProductDescriptionPage = () => {
   const [userBids, setUserBids] = useState([]);
   const [winningBid, setWinningBid] = useState(null);
   const isAuctionEnded = remainingTime === 0;
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+
 
   const fetchProductDetails = async () => {
     try {
       const productResponse = await axios.get(`http://localhost:9002/api/productdescription/${id}`);
       const productData = productResponse.data;
-      
       setProduct(productData);
-      
       calculateRemainingTime(productData.endTime);
-      // Fetch bidding history if time has not ended
-      if (!isAuctionEnded) {
-        fetchBiddingHistory();
-      }
-      // Fetch winning bid
-      fetchWinningBid();
+      fetchBiddingHistory();
     } catch (error) {
       console.error("Error fetching product details:", error);
     }
@@ -66,7 +92,7 @@ const ProductDescriptionPage = () => {
 
   useEffect(() => {
     if (isAuctionEnded && product) {
-      sendEmails(product._id); // Assuming product._id is the identifier for the product
+      fetchWinningBid();
     }
   }, [isAuctionEnded, product]);
   
@@ -77,7 +103,7 @@ const ProductDescriptionPage = () => {
 
     return () => clearInterval(interval);
   }, [remainingTime]);
-
+  
   const fetchBiddingHistory = async () => {
     try {
       const response = await axios.get(`http://localhost:9002/api/history/${id}`);
@@ -114,6 +140,31 @@ const ProductDescriptionPage = () => {
 
     setRemainingTime(Math.max(0, Math.floor(difference / 1000)));
   };
+
+  const handleReportSeller = () => {
+    setIsReportDialogOpen(true);
+  };
+
+  const handleCloseReportDialog = () => {
+    setIsReportDialogOpen(false);
+  };
+
+  const handleSubmitReport = async (reason) => {
+    try {
+      // Call the backend endpoint to report the user
+      await axios.post(`http://localhost:9002/api/reportUser/${id}`);
+  
+      // Close the report dialog
+      handleCloseReportDialog();
+  
+      // Optionally, you can show a success message to the user
+      alert('User reported successfully!');
+    } catch (error) {
+      console.error('Error reporting seller:', error);
+      // Optionally, handle errors and display error messages to the user
+    }
+  };
+
 
   const handlePlaceBid = async (e) => {
     e.preventDefault();
@@ -177,11 +228,11 @@ const ProductDescriptionPage = () => {
   return (
     <div className="product-description-page">
       {product && (
-        <div className="product-details">
+        <div>
           <div className="product-image">
             <img src={product.imageUrl} alt="Product" />
           </div>
-          <div>
+          <div className="description-right">
             <h1>{product.name}</h1>
             <h2>Current Bid: {product.currentBid}</h2>
             <div className="countdown">
@@ -190,7 +241,20 @@ const ProductDescriptionPage = () => {
             <div className="description">
               <h2>Description</h2>
               <p>{product.description}</p>
+              <p>Posted by: {product.userId.username}</p> {/* Display username of the poster */}
             </div>
+
+            {/* Button to report user */}
+            <button className="report-user-button" onClick={handleReportSeller}>Report User</button>
+
+            {isReportDialogOpen && (
+              <ReportDialog 
+                isOpen={isReportDialogOpen} 
+                onClose={handleCloseReportDialog} 
+                onSubmit={handleSubmitReport} 
+              />
+            )}
+
             {/* Conditionally render bid section */}
             {isAuctionEnded ? (
               <div className="auction-ended-message">
@@ -211,40 +275,37 @@ const ProductDescriptionPage = () => {
               <div className="bid-section">
                 <h2>Bid Now</h2>
                 <input
+                  className="bid-input"
                   type="text"
                   value={bidAmount}
                   onChange={(e) => setBidAmount(e.target.value)}
                   placeholder="Enter bid amount"
                   id="bidInput"
                 />
-                <button onClick={handlePlaceBid}>Place Bid</button>
-                <button className="wishlist">
-                  <AiOutlineHeart className="icon" />
-                  Wishlist
-                </button>
+                <button onClick={handlePlaceBid} style={{ marginLeft: '10px' }}>Place Bid</button>
               </div>
             )}
             {/* Conditionally render bidding history */}
             {!isAuctionEnded && userBids && userBids.length > 0 ? (
-            <div className="bidding-history">
-              <h2>Bidding History</h2>
-              {userBids.map((bid, index) => (
-                <div key={index} className="bid-item">
-                  <span className="user-name">{bid.userId.username}</span>
-                  <span className="amount">{bid.bidAmount}</span>
-                  <span className="time">{new Date(bid.timestamp).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-           {userBids && userBids.length === 0 && (
-             <p>No bids yet.</p>
-           )}
-           </div>
-         </div>
-       )}
-     </div>
-   );
- };
+              <div className="bidding-history">
+                <h2>Bidding History</h2>
+                {userBids.map((bid, index) => (
+                  <div key={index} className="bid-item">
+                    <span className="user-name">{bid.userId.username}</span>
+                    <span className="amount">{bid.bidAmount}</span>
+                    <span className="time">{new Date(bid.timestamp).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {userBids && userBids.length === 0 && (
+              <p>No bids yet.</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default ProductDescriptionPage;

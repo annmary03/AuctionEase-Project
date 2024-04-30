@@ -1,49 +1,4 @@
 
-  .details ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .details ul li {
-    font-size: 18px;
-    line-height: 1.5;
-  }
-  
-  .detail-label {
-    flex: 1;
-    color: #9c6b4a;
-    font-family: Work Sans, sans-serif;
-  }
-  
-  @media (max-width: 991px) {
-    .detail-label {
-      max-width: 100%;
-    }
-  }
-  
-  .detail-value {
-    flex: 1;
-    color: #1c120d;
-    font-family: Work Sans, sans-serif;
-    margin-top: 4px;
-  }
-  
-  @media (max-width: 991px) {
-    .detail-value {
-      max-width: 100%;
-    }
-  }
-
-  .bid-history {
-    margin-top: 40px;
-  }
-  
-  .bid-history h2 {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 16px;
-  }
-  
   .bidder-list {
     display: flex;
     flex-wrap: wrap;
@@ -60,13 +15,7 @@
     display: flex;
     gap: 16px;
   }
-  
-  .bidder-image {
-    width: 10px;
-    aspect-ratio: 1;
-    object-fit: cover;
-    object-position: center;
-  }
+
   
   .bidder-info {
     display: flex;
@@ -99,9 +48,6 @@
     line-height: 1.5;
   }
   
-  .bid-section {
-    margin-top: 20px;
-  }
   
   .bid-section input {
     width: 100%;
@@ -120,7 +66,7 @@
   }
   
   .bid-section button:hover {
-    background-color: #9c6b4a;
+    background-color: #5e544a;
   }
 
   .bidding-list {
@@ -151,27 +97,9 @@
   
 
 
-.product-description-page {
-  display: flex;
-  flex-direction: row; /* Set flex direction to row */
-  align-items: flex-start; /* Align items to the top */
-  margin-top: 40px;
-}
-
-.product-image {
-  flex:1;
-  height: 50%;
-  width: 50%;
-  }
-
 .product-image img {
-  width: 100%; /* Make sure the image fills its container */
-  height: auto; 
-}
-
-.product-details {
-  flex: 1; /* Make the product details container occupy 50% of the available space */
-  padding-left: 20px;
+  width: 500px; /* Make sure the image fills its container */
+  height: 500px; 
 }
 
 .product-details h1 {
@@ -187,20 +115,6 @@
 
 .description {
   margin-top: 20px;
-}
-
-.wishlist {
-  padding-right: 2000px;
-  background-color: #dc3545;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.wishlist:hover {
-  background-color: #9c2f3e;
 }
 
 
@@ -241,5 +155,133 @@
 
 .actions .icon {
   margin-right: 5px;
+}
+
+
+.report-user-button:hover {
+  background-color: #493f40;
+}
+
+.report-dialog {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Slightly transparent grey background */
+  z-index: 1;
+  overflow: auto;
+}
+
+.report-dialog.open {
+  display: block;
+}
+
+.dialog-content {
+  background-color: #fff;
+  margin: 10% auto; /* Center the dialog box vertically and horizontally */
+  padding: 20px;
+  border-radius: 5px;
+  height: 60%;
+  width: 70%; /* Set width to 70% of the screen */
+  overflow-y: auto; /* Enable vertical scrolling if content exceeds height */
+}
+
+.dialog-content h2 {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.dialog-content .description {
+  margin-top: 20px;
+  font-size: 18px;
+  line-height: 1.5;
+  resize: vertical; /* Allow vertical resizing */
+  min-height: 200px; /* Set minimum height */
+  width: calc(100% - 40px); /* Adjust width to fit within the dialog box */
+  padding: 10px; /* Add padding for better readability */
+}
+
+
+.dialog-content .button-container {
+  margin-top: 20px;
+}
+
+.dialog-content .button-container button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.dialog-content .button-container button:hover {
+  background-color: #615a5a;
+}
+
+.product-description-page {
+  display: flex;
+  flex-direction: row; /* Set flex direction to row */
+  align-items: flex-start; /* Align items to the top */
+}
+
+.product-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-image {
+  width: 100%;
+  height: auto;
+  border-bottom: 1px solid #f0f0f0;
+  padding-top: 50px;
+}
+
+.report-user-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #1c120d;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.bid-section {
+  margin-top: 20px;
+}
+
+.bidding-history {
+  margin-top: 20px;
+}
+
+.bidding-history h2 {
+  margin-bottom: 10px;
+}
+
+.bidding-history .bid-item {
+  margin-bottom: 5px;
+}
+
+.bidding-history .user-name {
+  font-weight: bold;
+}
+
+.auction-ended-message {
+  margin-top: 20px;
+}
+
+.description-right{
+  margin-left: 600px;
+  margin-top: -300px; 
+  width: 50%;
+}
+
+input.bid-input {
+  width: 250px; /* Adjust the width as needed */
+  /* Add any additional styling here */
 }
 

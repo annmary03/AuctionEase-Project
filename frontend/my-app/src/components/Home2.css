@@ -1,69 +1,81 @@
-body {
-  background-image: url('../assets/p.png'); /* Example path */
-  background-size: cover; 
-}
-.home-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.card {
-  width: 4000px; /* Adjust width as needed */
-  max-width: 4000px; /* Set maximum width for responsiveness */
-  height: 800px; /* Adjust height as needed */
-  background-color: #faf7f7;
-  border-radius: 10px;
-  overflow: hidden; /* Hide overflowing content */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  /*background-image: url('pngtree-vibrant-dark-purple-and-red-abstract-art-background-a-soft-gradient-image_13715741.png'); /* Use local image path */
+.home-container {
+  position: relative;
+  height: 100vh;
+  background-image: url('../assets/bg.jpg'); /* Replace 'your-image-path.jpg' with the actual path to your image */
   background-size: cover;
   background-position: center;
+  padding-top: -40px;
+}
+
+.overlay {
+  padding-top: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(238, 235, 235, 0.8); /* Adjust the opacity as needed */
   display: flex;
   flex-direction: column;
+  align-items: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.header {
+  text-align: center;
+  font-size: 90px;
+}
+
+.h1{
+  font-size: 90px;
+}
+
+.tagline {
+  font-size: 20px;
+  color: #555;
+}
+
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
 }
 
-.card-content {
-  text-align:center;
-  padding-bottom: 250px;
+.card {
+  flex: 1 0 30%; /* Adjust the width as needed */
+  margin: 10px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+
 }
 
-.write2 {
-  font-size: 4rem;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-.write1 {
-  font-size: 2rem;
-}
-
-.write {
-  margin-top: 0;
-  font-size: 1.5rem;
-}
-
-.bu {
-  background-color: transparent;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
+.explore-button {
+  margin-top: 20px;
   padding: 10px 20px;
+  background-color: #070d11;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 4px;
+  font-size: 1em;
+  text-decoration: none;
   cursor: pointer;
-  text-decoration: none;
-  font-size: 2rem;
+  transition: background-color 0.3s;
 }
 
-.but:hover {
-  background-color: transparent; /* Darken background color on hover */
-}
-
-.navbar-link {
-  text-decoration: none;
-  color: black;
-  
-}
-
-.navbar-link:hover {
-  text-decoration: underline; /* Add underline on hover */
+.explore-button:hover {
+  background-color: #40474b;
 }

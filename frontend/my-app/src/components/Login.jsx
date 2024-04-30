@@ -6,10 +6,8 @@ import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-
-const Login = ({ setLoginUser }) => {
+const Login = ({ setLoginUser,setIsAdmin }) => {
     const navigate = useNavigate();
-  
     const [user, setUser] = useState({
       email: '',
       password: ''
@@ -26,6 +24,8 @@ const Login = ({ setLoginUser }) => {
     const handleLogin = () => {
       if (user.email === 'auctioneaseplatform@gmail.com' && user.password === 'admin@123') {
         // If the login is for admin
+        setLoginUser(true);
+        setIsAdmin(true);
         navigate('/Admin');
       } else {
         axios
@@ -40,6 +40,7 @@ const Login = ({ setLoginUser }) => {
               localStorage.setItem('token', token);
               // Redirect to home page
               setLoginUser(true);
+              setIsAdmin(false);
               navigate('/home');
             }
           })
@@ -54,10 +55,7 @@ const Login = ({ setLoginUser }) => {
     };
     
     const handleForgotPassword = () => {
-      if (!user.email) {
-        alert('Please enter your email');
-        return;
-      }
+       
         const newPassword = generateRandomPassword(12);
         axios
           .post('http://localhost:9002/api/forgotpassword', { email: user.email ,newPassword})
@@ -95,7 +93,7 @@ const Login = ({ setLoginUser }) => {
           <h2>Login</h2>
           <h4>Welcome Back! Please enter your details.</h4>
           <form>
-            <div className="form-group">
+            <div className="login-form-group">
               <TextField
                 label="Email"
                 variant="standard"
@@ -106,7 +104,7 @@ const Login = ({ setLoginUser }) => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="login-form-group">
               <TextField
                 label="Password"
                 variant="standard"

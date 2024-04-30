@@ -1,11 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
+import logo from '../assets/nav.jpg';
+
 
 const Navbar = ({ isLoggedIn, isAdmin, handleLogout }) => {
   return (
     <nav className="navbar">
-      <div className="navbar-left">AuctionEase</div>
+      <div className="navbar-left">
+      <img src={logo} alt="AuctionEase Logo" className="navbar-logo" />
+      </div>
       <div className="navbar-right">
        
         {isLoggedIn && !isAdmin && (

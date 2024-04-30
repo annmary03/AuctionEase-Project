@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const app = express();
+const cron = require('node-cron');
 
 const cloudinary = require('cloudinary').v2;
 app.use(bodyParser.json());
@@ -40,6 +41,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: 'unblocked',
   },
+  ifreported: {
+    type: Number,
+    default: 0,
+  },
 });
 
 // Bids schema
@@ -51,7 +56,11 @@ const bidsSchema = new mongoose.Schema({
   currentBid: { type: Number, default: this.startingBid }, // Initially set to starting bid
   endTime: Date,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  imageUrl: String // URL of the uploaded image
+  imageUrl: String ,
+  emailsSent: {
+    type: Boolean,
+    default: false, // Default value is false
+  }
 });
 
 const Bid = mongoose.model('Bid', bidsSchema);
@@ -350,7 +359,7 @@ app.delete('/api/deleteBid/:id', async (req, res) => {
     try {
       const productId = req.params.id;
       // Fetch product details from the database based on the product ID
-      const product = await Bid.findById(productId);
+      const product = await Bid.findById(productId).populate('userId');
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
@@ -360,6 +369,7 @@ app.delete('/api/deleteBid/:id', async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+  
 
 
   app.get('/users', async (req, res) => {
@@ -390,6 +400,66 @@ app.delete('/api/deleteBid/:id', async (req, res) => {
       res.status(500).json({ message: 'Failed to block user', error: error.message });
     }
   });
+
+  // Backend Logic
+
+
+// Admin View
+
+app.get('/api/admin/reportedUsers', async (req, res) => {
+  try {
+    // Find users reported three times or more
+    const reportedUsers = await User.find({ ifreported: { $gte: 3 } });
+    res.json(reportedUsers);
+  } catch (error) {
+    console.error('Error fetching reported users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/api/reportUser/:id', async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    // Find the bid by ID to get the user's ID
+    const bid = await Bid.findById(productId);
+
+    if (!bid) {
+      return res.status(404).json({ message: 'Bid not found' });
+    }
+
+    const userId = bid.userId;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Increment the ifreported field by 1
+    user.ifreported = (user.ifreported || 0) + 1;
+
+    // Save the updated user
+    await user.save();
+
+    res.status(200).json({ message: 'User reported successfully' });
+  } catch (error) {
+    console.error('Error reporting user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/api/viewuser/:userId', async (req, res) => {
+  try {
+      const userId = req.params.userId;
+      const products = await Bid.find({ userId });
+      res.status(200).json(products);
+  } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 // Route to place a bid
@@ -565,6 +635,159 @@ app.get('/api/history/:id', async (req, res) => {
   }
 });
 
+app.get('/api/profile', async (req, res) => {
+  try {
+    const userId=getUserIdFromAuthentication(req)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ username: user.username, email: user.email });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update user password
+app.put('/api/updatePassword', async (req, res) => {
+  try {
+    const userId=getUserIdFromAuthentication(req);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    console.log(req.body.password)
+    user.password = hashedPassword;
+    await user.save();
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Check if the current password is correct
+app.post('/api/checkPassword', async (req, res) => {
+  const {  password } = req.body;
+
+  const userId = getUserIdFromAuthentication(req);
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    res.status(200).json({ valid: passwordMatch });
+  } catch (error) {
+    console.error('Error checking password:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+app.get('/api/biddedProducts', async (req, res) => {
+  try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+      
+      // Find productIds from userbids table that match the userId
+      const userBids = await Userbid.find({ userId: userId });
+      const productIds = userBids.map(bid => bid.productId);
+
+      // Find products from bids table that match the found productIds
+      const biddedProducts = await Bid.find({ _id: { $in: productIds } });
+      
+      res.json(biddedProducts);
+  } catch (error) {
+      console.error('Error fetching bidded products:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+app.get('/api/winningBiddedProducts', async (req, res) => {
+  try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+      
+      // Find winning bid products from userbids table that match the userId and isWinningBid true
+      const winningBids = await Userbid.find({ userId: userId, isWinningBid: true });
+      const productIds = winningBids.map(bid => bid.productId);
+
+      // Find products from bids table that match the found productIds
+      const winningBiddedProducts = await Bid.find({ _id: { $in: productIds } });
+      
+      res.json(winningBiddedProducts);
+  } catch (error) {
+      console.error('Error fetching winning bidded products:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+app.get('/api/viewuser/:userId', async (req, res) => {
+  try {
+      const userId = req.params.userId;
+      const products = await Bid.find({ userId });
+      res.status(200).json(products);
+  } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/users', async (req, res) => {
+  try {
+    const users = await User.find({}).exec(); // Corrected const User to const users
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error occurred while fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch users', error: error.message });
+  }
+});
+
+app.post('/unblockUser/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+  
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+  
+    user.status = 'unblocked'; // Update status to 'unblocked'
+    await user.save();
+  
+    res.status(200).json({ message: 'User unblocked successfully' });
+  } catch (error) {
+    console.error('Error occurred while unblocking user:', error);
+    res.status(500).json({ message: 'Failed to unblock user', error: error.message });
+  }
+});
+
+
+app.post('/blockUser/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+  
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+  
+    user.status = 'blocked';
+    await user.save();
+  
+    res.status(200).json({ message: 'User blocked successfully' });
+  } catch (error) {
+    console.error('Error occurred while blocking user:', error);
+    res.status(500).json({ message: 'Failed to block user', error: error.message });
+  }
+});
 
 
 // Start the server

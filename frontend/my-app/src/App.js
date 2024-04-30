@@ -13,7 +13,7 @@ import ProductDisplay from './components/ProductDisplay';
 import EditSell from './components/Editsell';
 import ViewUser from './components/ViewUser';
 import Home2 from './components/Home2'
-
+import ReportedUsers from './components/Reportedusers';
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State to manage authentication status
   const [isAdmin, setIsAdmin] = useState(false); 
@@ -51,6 +51,7 @@ const App = () => {
         <Route path="/productdescription/:id" element={<ProductDescription />} />
         <Route path="/editsell/:id" element={<EditSell />} />
         <Route path="/viewuser/:userId" element={<ViewUser/>} />
+        <Route path="/reportedusers" element={<ReportedUsers/>} />
       </Routes>
     </Router>
   );

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import './Sell.css';
+import './ViewUser.css';
+import { Delete } from '@mui/icons-material';
+
 const ViewUser = ({ match }) => {
   const [products, setProducts] = useState([]);
   const { userId } = useParams();
@@ -30,12 +32,13 @@ const ViewUser = ({ match }) => {
   return (
     <div className="product-auction-container">
       <h1>User Products</h1>
-      <div className="product-grid">
+      {products.length === 0 ? (
+        <p>No products to display</p>
+      ) : (
+        <div className="product-grid">
         {products.map((product) => (
           <div key={product._id} className="product-card">
-            <div className="action-buttons">
-              <button onClick={() => handleDelete(product._id)} className="action-button">Delete</button>
-            </div>
+            <button onClick={() => handleDelete(product._id)} className="delete-button"><Delete></Delete></button>
             <img src={product.imageUrl} alt={product.name} className="product-image" />
             <div className="product-details">
               <h3 className="product-name">{product.name}</h3>
@@ -46,6 +49,7 @@ const ViewUser = ({ match }) => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };

@@ -1,10 +1,10 @@
-//Create.jsx
+//create.jsx
 import './Create.css';
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cloudinary } from '@cloudinary/url-gen';
 
-const Create = () => {
+const Create = () => { // Changed from edit to Edit
   const cld = new Cloudinary({ cloud: { cloudName: 'dk3ryoigu' } });
   const navigate = useNavigate();
 
@@ -101,88 +101,101 @@ const Create = () => {
   };
 
   return (
-    <div className="create-container">
-      <h2 className="create-heading">Add Product</h2>
-      <form className="create-form" onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">Name:</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={product.name}
-            onChange={handleChange}
-            required
-          />
+      <div className="create-container">
+        <div className="create-left">
+          <div className="create-left-content">
+            <h3>ADD PRODUCT</h3>
+            </div>
         </div>
-        <div>
-          <label htmlFor="description">Description:</label>
-          <textarea
-            id="description"
-            name="description"
-            value={product.description}
-            onChange={handleChange}
-            required
-          ></textarea>
-        </div>
-        <div>
-          <label htmlFor="startingBid">Starting Bid:</label>
-          <input
-            type="number"
-            id="startingBid"
-            name="startingBid"
-            value={product.startingBid}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="endTime">End Time:</label>
-          <input
-  type="datetime-local"
-  id="endTime"
-  name="endTime"
-  value={product.endTime}
-  onChange={handleChange}
-  required
-/>
+        <div className="create-right">
+            <form className="create-form" onSubmit={handleSubmit}>
+            <div className="create-right">
+            <label htmlFor="name">Name:</label>
+            <input
+                className="create-input"
+                type="text"
+                id="name"
+                name="name"
+                value={product.name}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="description">Description:</label>
+              <input
+                className="create-input"
+                type="text"
+                id="description"
+                name="description"
+                value={product.description}
+                onChange={handleChange}
+                required
+              ></input>
+              <label htmlFor="startingBid">Starting Bid:</label>
+              <input
+                className="create-input"
+                type="number"
+                id="startingBid"
+                name="startingBid"
+                value={product.startingBid}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="endTime">End Time:</label>
+              <input
+                className="create-input"
+                type="datetime-local"
+                id="endTime"
+                name="endTime"
+                value={product.endTime}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="category">Category:</label>
+              <select
+                className="create-input"
+                id="category"
+                name="category"
+                value={product.category}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a category</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Books">Books</option>
+                <option value="Home & Garden">Home & Garden</option>
+                <option value="Art">Art</option>
+                {/* Add more options as needed */}
+              </select>
+              <label htmlFor="image">Image:</label>
+              <input
+                type="file"
+                accept="image/*"
+                id="image"
+                name="image"
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <button
+  type="submit"
+  className="create-button"
+  style={{
+    width: '50%',
+    backgroundColor: '#000',
+    color: '#fff',
+    marginLeft: '95px',
+  }}
+>
+  Add Product
+</button>
 
 
-
-
+</form>
+      </div>
+      <div className="background">
         </div>
-        <div>
-        <label htmlFor="category">Category:</label>
-        <select
-            id="category"
-            name="category"
-            value={product.category}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select a category</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Clothing">Clothing</option>
-            <option value="Books">Books</option>
-            <option value="Home & Garden">Home & Garden</option>
-            <option value="Art">Art</option>  
-            {/* Add more options as needed */}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="image">Image:</label>
-          <input
-            type="file"
-            accept="image/*"
-            id="image"
-            name="image"
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <button type="submit">Add Product</button>
-      </form>
-    </div>
+      </div>
   );
 };
 
