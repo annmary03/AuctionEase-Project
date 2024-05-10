@@ -165,6 +165,7 @@ const Create = () => { // Changed from edit to Edit
                 <option value="Books">Books</option>
                 <option value="Home & Garden">Home & Garden</option>
                 <option value="Art">Art</option>
+                <option value="Other">Other</option>
                 {/* Add more options as needed */}
               </select>
               <label htmlFor="image">Image:</label>

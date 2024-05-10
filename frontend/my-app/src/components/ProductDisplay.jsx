@@ -55,25 +55,22 @@ const ProductDisplay = () => {
   };
 
   return (
-    <main className="product-display">
-
+    <div className="product-grid">
       {/* Product cards */}
-      <div className="product-grid">
-        {filteredProducts.map((product) => (
-          <div key={product.id} className="product-card">
-            <img src={product.imageUrl} alt={product.name} className="product-image" />
-            <div className="product-details">
-              <h3 className="product-name">{product.name}</h3>
-              <p className="product-bid">Current Bid: {product.currentBid}</p>
-              <p className="product-category">Category: {product.category}</p>
-              <p className="product-time">{formatRemainingTime(product.endTime)}</p>
-              <Link to={`/productdescription/${product._id}`} className="view-product-button">View Product</Link>
-            </div>
-          </div>
-        ))}
-      </div>
-    </main>
-  );
+      {filteredProducts.map((product) => (
+        <div key={product.id} className="product-card">
+          <img src={product.imageUrl} alt={product.name} className="product-image" />
+          <div className="product-details">
+            <h3 className="product-name">{product.name}</h3>
+            <p className="product-bid">Current Bid: {product.currentBid}</p>
+            <p className="product-category">Category: {product.category}</p>
+            <p className="product-time">{formatRemainingTime(product.endTime)}</p>
+            <Link to={`/productdescription/${product._id}`} className="view-product-button">View Product</Link></div>
+        </div>
+      ))}
+    </div>
+);
 };
+
 
 export default ProductDisplay;

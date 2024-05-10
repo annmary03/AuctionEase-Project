@@ -6,6 +6,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import './Signup.css';
 import { TextField } from '@mui/material';
 import Modal from './Modal';
+import { IconButton } from '@mui/material';
+
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -53,17 +55,17 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match. Please try again.");
       return;
     }
-
+  
     if (!formData.agreeToTerms) {
       alert("Please agree to the Terms of Service and Privacy Policy.");
       return;
     }
-
+  
     try {
       const response = await fetch('http://localhost:9002/api/signup', {
         method: 'POST',
@@ -72,20 +74,26 @@ function Signup() {
         },
         body: JSON.stringify(formData)
       });
-
+  
+      const responseData = await response.json();
+  
       if (!response.ok) {
-        throw new Error('Error signing up. Please try again.');
+        if (response.status === 409) {
+          alert(responseData.message); // Show the message sent from the backend
+        } else {
+          throw new Error('Error signing up. Please try again.');
+        }
+      } else {
+        console.log("Signup response:", responseData);
+        navigate('/login');
+        alert("Signup successful! You can now login with your credentials.");
       }
-
-      const data = await response.json();
-      console.log("Signup response:", data);
-      navigate('/login');
-      alert("Signup successful! You can now login with your credentials.");
     } catch (error) {
       console.error("Error signing up:", error.message);
       alert(error.message);
     }
   };
+  
 
   return (
     <div className="signup-container">
@@ -120,26 +128,41 @@ function Signup() {
             />
           </div>
           <div className="signup-form-group">
-            <TextField
-              label="Password"
-              variant="standard"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+          <TextField
+  label="Password"
+  variant="standard"
+  name="password"
+  type={showPassword ? "text" : "password"}
+  value={formData.password}
+  onChange={handleChange}
+  required
+  InputProps={{
+    endAdornment: (
+      <IconButton onClick={togglePasswordVisibility} edge="end">
+        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+      </IconButton>
+    ),
+  }}
+/>
           </div>
           <div className="signup-form-group">
-            <TextField
-              label="Confirm Password"
-              variant="standard"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
+          <TextField
+  label="Confirm Password"
+  variant="standard"
+  name="confirmPassword"
+  type={showPassword ? "text" : "password"}
+  value={formData.confirmPassword}
+  onChange={handleChange}
+  required
+  InputProps={{
+    endAdornment: (
+      <IconButton onClick={togglePasswordVisibility} edge="end">
+        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+      </IconButton>
+    ),
+  }}
+/>
+
           </div>
           <div className="signup-form-group">
             <input

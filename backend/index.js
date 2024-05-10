@@ -100,7 +100,7 @@ app.post('/api/signup', async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'Email already exists in the database' });
-    }
+}
    
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
