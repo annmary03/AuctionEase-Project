@@ -8,7 +8,7 @@
 }
 
 .change-password-button {
-  padding: 5px; /* Reduce padding */
+  padding: 5px;
   padding-top: 10px;
   background-color: #333;
   color: white;
@@ -29,8 +29,7 @@
 }
 
 .sidebar {
-  width: 20%; /* Adjust width as needed */
-  padding: 20px;
+  width: 20%;
   padding: 20px;
   background-color: #333;
   border-right: 1px solid #ddd;
@@ -56,111 +55,7 @@
 }
 
 .sidebar button:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Highlight on hover */
-}
-
-.bidded-products-list {
-  list-style-type: none; /* Remove bullet points */
-  padding: 0; /* Remove default padding */
-}
-
-.bidded-products-list li {
-  margin-bottom: 10px; /* Add margin between each product */
-  padding: 10px; /* Add padding to each product */
-  background-color: #f0f0f0; /* Add background color */
-  border-radius: 5px; /* Add border radius for rounded corners */
-}
-
-.bidded-products-list li:hover {
-  background-color: #e0e0e0; /* Change background color on hover */
-}
-
-.proproduct-card{
-  position: relative; /* Make the parent container relative for absolute positioning */
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  height: 100px;
-  width: 100px;
-}
-
-/* Add these styles to your existing Profile.css file */
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-}
-
-.product-list {
-  flex: 1;
-  padding: 20px;
-}
-
-.bidded-products {
-  margin-top: 20px;
-}
-
-.product-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px; /* Add margin to separate cards */
-  overflow: hidden;
-  max-width: 200px; /* Set maximum width */
-}
-
-.product-details {
-  padding: 10px;
-}
-
-.product-details p {
-  margin: 5px 0;
-}
-
-.product-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: flex-start; /* Align cards to the start of the row */
-}
-
-
-
-.product-card img {
-  max-width: 100%;
-  max-height: 50%; /* Limit the image height to 50% of the card height */
-  object-fit: cover; /* Ensure the image covers the specified dimensions */
-}
-
-.product-card h3 {
-  margin: 10px 0;
-  font-size: 16px;
-}
-
-.product-card p {
-  margin: 5px 0;
-  font-size: 14px;
-}
-
-.change-password-button {
-  padding: 2px;
-  background-color: #333;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.change-password-button:hover {
-  background-color: rgb(70, 62, 62);
-}
-
-.line {
-  border: 1px solid #ccc;
-}
-
-.product-list {
-  margin-top: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .bidded-products-list {
@@ -178,4 +73,78 @@
 .bidded-products-list li:hover {
   background-color: #e0e0e0;
 }
-/* Add other necessary styles as per your design */
+
+.product-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+  max-width: 200px;
+}
+
+.product-details {
+  padding: 10px;
+}
+
+.product-details p {
+  margin: 5px 0;
+}
+
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.product-card img {
+  max-width: 100%;
+  max-height: 50%;
+  object-fit: cover;
+}
+
+.product-card h3 {
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+.product-card p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.line {
+  border: 1px solid #ccc;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.dialog-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 100%;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.error-message {
+  color: red;
+}

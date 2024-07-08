@@ -1,3 +1,4 @@
+/* General container setup */
 .signup-container {
   display: flex;
   justify-content: center;
@@ -5,7 +6,7 @@
   height: 100vh;
 }
 
-/* Inside Signup.css */
+/* Left side setup */
 .signup-left {
   position: relative;
   width: 50%;
@@ -28,17 +29,15 @@
 }
 
 .signup-left-content h2 {
- 
-  font-size: 60px; /* Adjust font size as needed */
+  font-size: 60px;
   margin-bottom: 10px;
 }
 
 .signup-left-content p {
-
   font-size: 16px;
 }
 
-
+/* Right side setup */
 .signup-right {
   width: 50%;
   flex: 1;
@@ -56,8 +55,14 @@
 .signup-form-group {
   width: 100%;
   margin-bottom: 20px;
+  position: relative;
 }
 
+.signup-form-group .MuiTextField-root {
+  width: 400px;
+}
+
+/* Button styles */
 .signup-button {
   width: 100%;
   height: 40px;
@@ -68,6 +73,23 @@
   cursor: pointer;
 }
 
+.signup-button:hover {
+  background-color: #45a049;
+}
+
+/* Link button styles */
+.link-button {
+  background: none;
+  color: blue;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+}
+
+/* Signup link styles */
 .signup-link {
   margin-top: 20px;
 }
@@ -76,6 +98,15 @@
   color: #060708;
 }
 
-.signup-form-group .MuiTextField-root {
-  width: 400px;
+/* Password requirements styles */
+.password-requirements {
+  margin-top: 10px;
+}
+
+.requirement-satisfied {
+  color: green;
+}
+
+.requirement-unsatisfied {
+  color: rgb(255, 0, 0);
 }

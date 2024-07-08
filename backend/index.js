@@ -6,13 +6,13 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const app = express();
-const cron = require('node-cron');
-
+const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const cron = require('node-cron');
 app.use(cors());
 
 require('dotenv').config();
@@ -31,6 +31,7 @@ mongoose.connection.on('error', (err) => {
 app.use(express.json());
 
 // User schema
+
 const userSchema = new mongoose.Schema({
   username: String,
   email: String,
@@ -63,10 +64,6 @@ const bidsSchema = new mongoose.Schema({
   }
 });
 
-const Bid = mongoose.model('Bid', bidsSchema);
-
-const User = mongoose.model('User', userSchema);
-
 const userbidsSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bid' },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to the user who placed the bid
@@ -75,7 +72,13 @@ const userbidsSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
+
 const Userbid = mongoose.model('Userbid', userbidsSchema);
+
+const Bid = mongoose.model('Bid', bidsSchema);
+
+const User = mongoose.model('User', userSchema);
+
 
 cloudinary.config({
   cloud_name: 'dk3ryoigu',
@@ -87,8 +90,8 @@ cloudinary.config({
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'auctioneaseplatform@gmail.com', // Your Gmail email address
-      pass: 'wqib pose sunz yjoz', // Use the generated app password here //this password is fake generated dont use for real purposes it wont work
+      user: 'auctioneaseplatform@gmail.com', 
+      pass: 'wqib pose sunz yjoz', 
     },
   });
 // Signup endpoint
@@ -100,7 +103,7 @@ app.post('/api/signup', async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'Email already exists in the database' });
-}
+    }
    
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -133,6 +136,10 @@ app.post('/api/login', async (req, res) => {
     return res.status(401).json({ message: 'Email does not exist' });
   }
 
+  if (user.status === 'blocked') {
+    return res.status(401).json({ message: 'User blocked by admin' });
+  }
+
   // Compare the passwords
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) {
@@ -152,7 +159,7 @@ app.post('/api/forgotpassword', async (req, res) => {
       // Call the sendForgotPasswordEmail function
       await sendForgotPasswordEmail(email,newPassword);
   
-      res.status(200).json({ message: 'Email sent successfully' });
+      res.status(200).json({ message: 'Email sent successfully to your registered emailid' });
     } catch (error) {
       console.error('Error sending forgot password email:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -219,10 +226,9 @@ const sendForgotPasswordEmail = async (email,newPassword) => {
       return res.status(200).json({ message: 'Welcome email sent successfully' });
     });
   };
-
-// Define the endpoint for adding a bid
+  // Define the endpoint for adding a bid
 app.post('/api/addBid', (req, res) => {
-  const { name, description, startingBid, endTime, category, imageUrl } = req.body;
+  const {name,description,startingBid,endTime,category,imageUrl} = req.body;
   console.log("Received data:", req.body);
 
   const userId = getUserIdFromAuthentication(req);
@@ -248,15 +254,32 @@ app.post('/api/addBid', (req, res) => {
     });
 });
 
-
   
   
   const getUserIdFromAuthentication = (req) => {
     // Extract user ID from JWT token in request headers
-    const token = req.headers.authorization.split(' ')[1];
+    const token = req.headers.authorization.split(' ')[1]; // Assuming JWT token is in the format: Bearer <token>
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded.userId;
   };
+
+  app.get('/api/productdisplay', async (req, res) => {
+    try {
+      // Retrieve the user ID from the request or authentication context
+      const userId = getUserIdFromAuthentication(req); // You need to implement this function
+  
+      // Fetch products excluding those added by the logged-in user and whose endTime has not passed
+      const products = await Bid.find({ 
+        userId: { $ne: userId },
+        endTime: { $gt: new Date() } // Filter out products with endTime greater than current time
+      }).select('-userId');
+        
+      res.status(200).json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
 
   app.put('/api/modifyBid/:id', async (req, res) => {
     const bidId = req.params.id;
@@ -293,8 +316,7 @@ app.post('/api/addBid', (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
- 
-  
+// Delete Bid endpoint
 const { ObjectId } = require('mongoose').Types;
 
 // Delete Bid endpoint
@@ -327,8 +349,8 @@ app.delete('/api/deleteBid/:id', async (req, res) => {
       const userId = getUserIdFromAuthentication(req); // You need to implement this function
   
       // Fetch products added by the logged-in user
-      const products = await Bid.find({ userId }).select('-userId').sort({ endTime: 'asc' });
-    
+      const products = await Bid.find({ userId });
+  
       res.status(200).json(products);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -336,26 +358,41 @@ app.delete('/api/deleteBid/:id', async (req, res) => {
     }
   });
 
-  app.get('/api/productdisplay', async (req, res) => {
+  app.get('/api/viewuser/:userId', async (req, res) => {
     try {
-      // Retrieve the user ID from the request or authentication context
-      const userId = getUserIdFromAuthentication(req); // You need to implement this function
-  
-      // Fetch products excluding those added by the logged-in user and whose endTime has not passed
-      const products = await Bid.find({ 
-        userId: { $ne: userId },
-        endTime: { $gt: new Date() } // Filter out products with endTime greater than current time
-      }).select('-userId');
-        
-      res.status(200).json(products);
+        const userId = req.params.userId;
+        const products = await Bid.find({ userId });
+        res.status(200).json(products);
     } catch (error) {
-      console.error('Error fetching products:', error);
-      res.status(500).json({ message: 'Internal server error' });
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-  });
+});
 
+
+  app.get('/users', async (req, res) => {
+    try {
+      const users = await User.find({}).exec();
+      res.status(200).json(users);
+    } catch (error) {
+      console.error('Error occurred while fetching users:', error);
+      res.status(500).json({ message: 'Failed to fetch users', error: error.message });
+    }
+  });
+
+app.delete('/delete/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    await User.findByIdAndDelete(userId);
   
-  app.get('/api/productdescription/:id', async (req, res) => {
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error occurred while deleting user:', error);
+    res.status(500).json({ message: 'Failed to delete user', error: error.message });
+  }
+});
+
+app.get('/api/productdescription/:id', async (req, res) => {
     try {
       const productId = req.params.id;
       // Fetch product details from the database based on the product ID
@@ -366,101 +403,9 @@ app.delete('/api/deleteBid/:id', async (req, res) => {
       res.json(product);
     } catch (error) {
       console.error('Error fetching product details:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
-
-
-  app.get('/users', async (req, res) => {
-    try {
-      const users = await User.find({}).exec(); // Corrected const User to const users
-      res.status(200).json(users);
-    } catch (error) {
-      console.error('Error occurred while fetching users:', error);
-      res.status(500).json({ message: 'Failed to fetch users', error: error.message });
-    }
-  });
-
-  app.post('/blockUser/:userId', async (req, res) => {
-    try {
-      const userId = req.params.userId;
-      const user = await User.findById(userId);
-    
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-    
-      user.status = 'blocked';
-      await user.save();
-    
-      res.status(200).json({ message: 'User blocked successfully' });
-    } catch (error) {
-      console.error('Error occurred while blocking user:', error);
-      res.status(500).json({ message: 'Failed to block user', error: error.message });
-    }
-  });
-
-  // Backend Logic
-
-
-// Admin View
-
-app.get('/api/admin/reportedUsers', async (req, res) => {
-  try {
-    // Find users reported three times or more
-    const reportedUsers = await User.find({ ifreported: { $gte: 3 } });
-    res.json(reportedUsers);
-  } catch (error) {
-    console.error('Error fetching reported users:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.post('/api/reportUser/:id', async (req, res) => {
-  try {
-    const productId = req.params.id;
-
-    // Find the bid by ID to get the user's ID
-    const bid = await Bid.findById(productId);
-
-    if (!bid) {
-      return res.status(404).json({ message: 'Bid not found' });
-    }
-
-    const userId = bid.userId;
-
-    // Find the user by ID
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Increment the ifreported field by 1
-    user.ifreported = (user.ifreported || 0) + 1;
-
-    // Save the updated user
-    await user.save();
-
-    res.status(200).json({ message: 'User reported successfully' });
-  } catch (error) {
-    console.error('Error reporting user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get('/api/viewuser/:userId', async (req, res) => {
-  try {
-      const userId = req.params.userId;
-      const products = await Bid.find({ userId });
-      res.status(200).json(products);
-  } catch (error) {
-      console.error('Error fetching products:', error);
       res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
+    }
+  });
 
 // Route to place a bid
 app.post('/api/bids/:id', async (req, res) => {
@@ -471,7 +416,7 @@ app.post('/api/bids/:id', async (req, res) => {
     return res.status(400).json({ message: 'Invalid bid amount. Please enter a number.' });
   }
 
-  let session; // Declare session variable outside the try-catch block
+  let session; 
 
   try {
     // Start a MongoDB session
@@ -523,10 +468,7 @@ app.post('/api/bids/:id', async (req, res) => {
     }
     res.status(500).json({ message: 'Internal server error' });
   }
-}); 
-
-
-
+});
 
 // Add a new endpoint to get winning bid details for a specific product
 app.get('/api/getWinningBid/:id', async (req, res) => {
@@ -550,74 +492,83 @@ app.get('/api/getWinningBid/:id', async (req, res) => {
 });
 
 
-
-// Endpoint to send emails to both the winning bidder and the seller after the auction ends
-app.post('/api/sendEmails/:productId', async (req, res) => {
-  const productId = req.params.productId;
-
+// Scheduling the task to run every minute 
+cron.schedule('* * * * *', async () => {
   try {
-    // Find the winning bid for the specified product
-    const winningBid = await Userbid.findOne({ productId, isWinningBid: true })
-      .select('userId bidAmount timestamp')
-      .populate('userId', 'email username');
+    // Find all products where the auction end time is in the past
+    const endedProducts = await Bid.find({ endTime: { $lt: new Date() }, emailsSent: { $ne: true } });
 
-    if (!winningBid) {
-      return res.status(404).json({ message: 'No winning bid found.' });
+    // Process each ended product
+    for (const product of endedProducts) {
+      const productId = product._id;
+
+      // Find the winning bid for the product
+      const winningBid = await Userbid.findOne({ productId, isWinningBid: true })
+        .select('userId bidAmount timestamp')
+        .populate('userId', 'email username');
+
+      if (!winningBid) {
+        console.log('No winning bid found for product:', productId);
+        continue;
+      }
+
+      // Fetch product details including userId
+const productDetails = await Bid.findById(productId).populate('userId', 'email username');
+
+if (!productDetails.userId || !productDetails.userId.email) {
+  console.log('Seller email not found for product:', productId);
+  continue; // Skip sending email to seller if email is not found
+}
+
+// Extract the seller's email from the product details
+const sellerEmail = productDetails.userId.email;
+const sellerUsername = productDetails.userId.username;
+
+      // Email to the winning bidder
+      const buyerMailOptions = {
+        from: 'auctioneaseplatform@gmail.com',
+        to: winningBid.userId.email,
+        subject: 'Congratulations! You won the bid!',
+        text: `Dear ${winningBid.userId.username},\n\nCongratulations! You have won the bid for the product. Here are the details:\n\n` +
+              `Bid Amount: ${winningBid.bidAmount}\n` +
+              `Time of Bid: ${winningBid.timestamp}\n\n` +
+              `Please proceed with the payment and contact the seller ${sellerUsername} (${sellerEmail}) for further instructions.\n\n` +
+              `Thank you for using our auction platform.\n\nBest regards,`
+      };
+
+      // Email to the seller
+      const sellerMailOptions = {
+        from: 'auctioneaseplatform@gmail.com',
+        to: sellerEmail,
+        subject: 'Your product has been sold!',
+        text: `Dear ${sellerUsername},\n\nCongratulations! Your product has been sold. Here are the details of the winning bid:\n\n` +
+              `Bid Amount: ${winningBid.bidAmount}\n` +
+              `Time of Bid: ${winningBid.timestamp}\n\n` +
+              `The winning bidder's details:\n` +
+              `Username: ${winningBid.userId.username}\n` +
+              `Email: ${winningBid.userId.email}\n\n` +
+              `Please contact the winning bidder for further arrangements.\n\n` +
+              `Thank you for using our auction platform.\n\nBest regards,`
+      };
+
+      // Send emails to both parties
+      await Promise.all([
+        transporter.sendMail(buyerMailOptions),
+        transporter.sendMail(sellerMailOptions)
+      ]);
+
+      console.log('Emails sent to winning bidder and seller for product:', productId);
+
+      // Update the product status to indicate that emails have been sent
+      await Bid.findByIdAndUpdate(productId, { $set: { emailsSent: true } });
     }
-
-    // Fetch product details including userId
-    const product = await Bid.findById(productId).populate('userId', 'email username');
-
-    // Extract the seller's email from the product details
-    const sellerEmail = product.userId.email;
-    const sellerUsername = product.userId.username;
-
-    // Email to the winning bidder
-    const buyerMailOptions = {
-      from: 'auctioneaseplatform@gmail.com',
-      to: winningBid.userId.email,
-      subject: 'Congratulations! You won the bid!',
-      text: `Dear ${winningBid.userId.username},\n\nCongratulations! You have won the bid for the product. Here are the details:\n\n`
-            + `Bid Amount: ${winningBid.bidAmount}\n`
-            + `Time of Bid: ${winningBid.timestamp}\n\n`
-            + `Please proceed with the payment and contact the seller ${sellerUsername} (${sellerEmail}) for further instructions.\n\n`
-            + `Thank you for using our auction platform.\n\nBest regards,`
-    };
-
-    // Email to the seller
-    const sellerMailOptions = {
-      from: 'auctioneaseplatform@gmail.com',
-      to: sellerEmail,
-      subject: 'Your product has been sold!',
-      text: `Dear ${sellerUsername},\n\nCongratulations! Your product has been sold. Here are the details of the winning bid:\n\n`
-            + `Bid Amount: ${winningBid.bidAmount}\n`
-            + `Time of Bid: ${winningBid.timestamp}\n\n`
-            + `The winning bidder's details:\n`
-            + `Username: ${winningBid.userId.username}\n`
-            + `Email: ${winningBid.userId.email}\n\n`
-            + `Please contact the winning bidder for further arrangements.\n\n`
-            + `Thank you for using our auction platform.\n\nBest regards,`
-    };
-
-    // Send emails to both parties
-    await Promise.all([
-      transporter.sendMail(buyerMailOptions),
-      transporter.sendMail(sellerMailOptions)
-    ]);
-
-    console.log('Emails sent to winning bidder and seller.');
-    
-    res.status(200).json({ message: 'Emails sent successfully.' });
   } catch (error) {
     console.error('Error sending emails:', error);
-    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-
-
-
 // GET endpoint to fetch bidding history records for a specific product ID
+
 app.get('/api/history/:id', async (req, res) => {
   const productId = req.params.id;
 
@@ -632,121 +583,6 @@ app.get('/api/history/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching bidding history:', error);
     res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get('/api/profile', async (req, res) => {
-  try {
-    const userId=getUserIdFromAuthentication(req)
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json({ username: user.username, email: user.email });
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Update user password
-app.put('/api/updatePassword', async (req, res) => {
-  try {
-    const userId=getUserIdFromAuthentication(req);
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    console.log(req.body.password)
-    user.password = hashedPassword;
-    await user.save();
-    res.status(200).json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Error updating password:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Check if the current password is correct
-app.post('/api/checkPassword', async (req, res) => {
-  const {  password } = req.body;
-
-  const userId = getUserIdFromAuthentication(req);
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    res.status(200).json({ valid: passwordMatch });
-  } catch (error) {
-    console.error('Error checking password:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-
-app.get('/api/biddedProducts', async (req, res) => {
-  try {
-      const token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userId = decoded.userId;
-      
-      // Find productIds from userbids table that match the userId
-      const userBids = await Userbid.find({ userId: userId });
-      const productIds = userBids.map(bid => bid.productId);
-
-      // Find products from bids table that match the found productIds
-      const biddedProducts = await Bid.find({ _id: { $in: productIds } });
-      
-      res.json(biddedProducts);
-  } catch (error) {
-      console.error('Error fetching bidded products:', error);
-      res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-
-app.get('/api/winningBiddedProducts', async (req, res) => {
-  try {
-      const token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const userId = decoded.userId;
-      
-      // Find winning bid products from userbids table that match the userId and isWinningBid true
-      const winningBids = await Userbid.find({ userId: userId, isWinningBid: true });
-      const productIds = winningBids.map(bid => bid.productId);
-
-      // Find products from bids table that match the found productIds
-      const winningBiddedProducts = await Bid.find({ _id: { $in: productIds } });
-      
-      res.json(winningBiddedProducts);
-  } catch (error) {
-      console.error('Error fetching winning bidded products:', error);
-      res.status(500).json({ error: 'Internal server error' });
-  }
-});
-app.get('/api/viewuser/:userId', async (req, res) => {
-  try {
-      const userId = req.params.userId;
-      const products = await Bid.find({ userId });
-      res.status(200).json(products);
-  } catch (error) {
-      console.error('Error fetching products:', error);
-      res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-app.get('/users', async (req, res) => {
-  try {
-    const users = await User.find({}).exec(); // Corrected const User to const users
-    res.status(200).json(users);
-  } catch (error) {
-    console.error('Error occurred while fetching users:', error);
-    res.status(500).json({ message: 'Failed to fetch users', error: error.message });
   }
 });
 
@@ -789,8 +625,155 @@ app.post('/blockUser/:userId', async (req, res) => {
   }
 });
 
+// Admin View
 
-// Start the server
+app.get('/api/admin/reportedUsers', async (req, res) => {
+  try {
+    // Find users reported three times or more
+    const reportedUsers = await User.find({ ifreported: { $gte: 3 } });
+    res.json(reportedUsers);
+  } catch (error) {
+    console.error('Error fetching reported users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Endpoint to report a user
+app.post('/api/reportUser/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Increment the isreported field by 1
+    user.ifreported = (user.ifreported || 0) + 1;
+
+    // Save the updated user
+    await user.save();
+
+    res.status(200).json({ message: 'User reported successfully' });
+  } catch (error) {
+    console.error('Error reporting user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+ 
+
+// Fetch user profile
+app.get('/api/profile', async (req, res) => {
+  try {
+    const userId=getUserIdFromAuthentication(req)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ username: user.username, email: user.email });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/api/biddedProducts', async (req, res) => {
+  try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+      
+      // Find productIds from userbids table that match the userId
+      const userBids = await Userbid.find({ userId: userId });
+      const productIds = userBids.map(bid => bid.productId);
+
+      // Find products from bids table that match the found productIds
+      const biddedProducts = await Bid.find({ _id: { $in: productIds } });
+      
+      res.json(biddedProducts);
+  } catch (error) {
+      console.error('Error fetching bidded products:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+// Route to fetch sold products
+app.get('/api/soldProducts', async (req, res) => {
+  try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+      const soldProducts = await Bid.find({ userId: userId, isSold: true });
+      res.json(soldProducts);
+  } catch (error) {
+      console.error('Error fetching sold products:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/winningBiddedProducts', async (req, res) => {
+  try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.userId;
+      
+      // Find winning bid products from userbids table that match the userId and isWinningBid true
+      const winningBids = await Userbid.find({ userId: userId, isWinningBid: true });
+      const productIds = winningBids.map(bid => bid.productId);
+
+      // Find products from bids table that match the found productIds
+      const winningBiddedProducts = await Bid.find({ _id: { $in: productIds } });
+      
+      res.json(winningBiddedProducts);
+  } catch (error) {
+      console.error('Error fetching winning bidded products:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update user password
+app.put('/api/updatePassword', async (req, res) => {
+  try {
+    const userId=getUserIdFromAuthentication(req);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    console.log(req.body.password)
+    user.password = hashedPassword;
+    await user.save();
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Check if the current password is correct
+app.post('/api/checkPassword', async (req, res) => {
+  const {  password } = req.body;
+
+  const userId = getUserIdFromAuthentication(req);
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    res.status(200).json({ valid: passwordMatch });
+  } catch (error) {
+    console.error('Error checking password:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 const PORT = process.env.PORT || 9002;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

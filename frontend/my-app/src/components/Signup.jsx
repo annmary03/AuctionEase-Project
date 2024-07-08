@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import InfoIcon from '@mui/icons-material/Info';
 import './Signup.css';
-import { TextField } from '@mui/material';
+import { TextField, Box } from '@mui/material';
 import Modal from './Modal';
-import { IconButton } from '@mui/material';
-
+import { IconButton, Tooltip } from '@mui/material';
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -21,7 +21,9 @@ function Signup() {
   const [passwordRequirements, setPasswordRequirements] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [passwordInfoClicked, setPasswordInfoClicked] = useState(false); // State to track if password info icon is clicked
+  
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -40,7 +42,6 @@ function Signup() {
 
   const updatePasswordRequirements = (password) => {
     const requirements = [
-      { text: 'Password must contain' },
       { text: 'At least 12 characters long', satisfied: password.length >= 12 },
       { text: 'Contain a combination of upper and lower-case letters', satisfied: /[a-z]/.test(password) && /[A-Z]/.test(password) },
       { text: 'Contain at least one digit', satisfied: /\d/.test(password) },
@@ -53,11 +54,23 @@ function Signup() {
     setShowPassword(prevState => !prevState);
   };
 
+  const togglePasswordRequirementsVisibility = () => {
+    setShowPasswordRequirements(prevState => !prevState);
+    setPasswordInfoClicked(true); // Set the state to true when info icon is clicked
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match. Please try again.");
+      return;
+    }
+
+    const isPasswordValid = passwordRequirements.every(req => req.satisfied);
+
+    if (!isPasswordValid) {
+      alert("Password does not meet the requirements. Please ensure it meets all the criteria.");
       return;
     }
   
@@ -128,41 +141,56 @@ function Signup() {
             />
           </div>
           <div className="signup-form-group">
-          <TextField
-  label="Password"
-  variant="standard"
-  name="password"
-  type={showPassword ? "text" : "password"}
-  value={formData.password}
-  onChange={handleChange}
-  required
-  InputProps={{
-    endAdornment: (
-      <IconButton onClick={togglePasswordVisibility} edge="end">
-        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-      </IconButton>
-    ),
-  }}
-/>
+            <TextField
+              label="Password"
+              variant="standard"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={handleChange}
+              required
+              InputProps={{
+                endAdornment: (
+                  <>
+                    <IconButton onClick={togglePasswordVisibility} edge="end">
+                      {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                    </IconButton>
+                    <Tooltip title="Show password requirements">
+                      <IconButton onClick={togglePasswordRequirementsVisibility} edge="end">
+                        <InfoIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                ),
+              }}
+            />
+            {passwordInfoClicked && showPasswordRequirements && ( // Check if info icon is clicked
+              <Box mt={1}>
+                {passwordRequirements.map((req, index) => (
+                  <p key={index} className={req.satisfied ? 'requirement-satisfied' : 'requirement-unsatisfied'}>
+                    {req.text}
+                  </p>
+                ))}
+              </Box>
+            )}
           </div>
           <div className="signup-form-group">
-          <TextField
-  label="Confirm Password"
-  variant="standard"
-  name="confirmPassword"
-  type={showPassword ? "text" : "password"}
-  value={formData.confirmPassword}
-  onChange={handleChange}
-  required
-  InputProps={{
-    endAdornment: (
-      <IconButton onClick={togglePasswordVisibility} edge="end">
-        {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-      </IconButton>
-    ),
-  }}
-/>
-
+            <TextField
+              label="Confirm Password"
+              variant="standard"
+              name="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              InputProps={{
+                endAdornment: (
+                  <IconButton onClick={togglePasswordVisibility} edge="end">
+                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                  </IconButton>
+                ),
+              }}
+            />
           </div>
           <div className="signup-form-group">
             <input
@@ -173,8 +201,14 @@ function Signup() {
               onChange={handleChange}
             />
             <label htmlFor="agreeToTerms">
-  <a href="#" onClick={(e) => { e.preventDefault(); setIsModalOpen(true); }}>I agree to the Terms of Service and Privacy Policy.</a>
-</label>
+              <button 
+                type="button" 
+                className="link-button" 
+                onClick={(e) => { e.preventDefault(); setIsModalOpen(true); }}
+              >
+                I agree to the Terms of Service and Privacy Policy.
+              </button>
+            </label>
           </div>
           <button type="submit" className="signup-button">Create Account</button>
         </form>

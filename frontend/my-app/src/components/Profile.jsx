@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Profile.css';
 import axios from 'axios';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 
 const Profile = ({ userId }) => {
     const [user, setUser] = useState({});
@@ -133,21 +134,19 @@ const Profile = ({ userId }) => {
         }
     };
 
-    // Inside the Profile component
-
-const handleProductTypeClick = async (productType) => {
-    setSelectedProductType(productType);
-    switch (productType) {
-        case 'bidded':
-            await fetchBiddedProducts();
-            break;
-        case 'winning':
-            await fetchWinningBiddedProducts();
-            break;
-        default:
-            break;
-    }
-};
+    const handleProductTypeClick = async (productType) => {
+        setSelectedProductType(productType);
+        switch (productType) {
+            case 'bidded':
+                await fetchBiddedProducts();
+                break;
+            case 'winning':
+                await fetchWinningBiddedProducts();
+                break;
+            default:
+                break;
+        }
+    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -156,8 +155,9 @@ const handleProductTypeClick = async (productType) => {
     if (error) {
         return <div>Error: {error}</div>;
     }
+
     return (
-      <div className="profile-container">
+        <div className="profile-container">
             <div className="sidebar">
                 <button onClick={() => handleProductTypeClick('bidded')}>Bidded Products</button>
                 <button onClick={() => handleProductTypeClick('winning')}>Winning Bid Products</button>
@@ -174,82 +174,83 @@ const handleProductTypeClick = async (productType) => {
                 <div className="product-list">
                     {selectedProductType === 'bidded' && biddedProducts.length > 0 && (
                         <div>
-                        <h2>Bidded Products</h2>
-                        <div className="product-grid">
-                            {biddedProducts.map((product) => (
-                                <div key={product.id} className="product-card">
-                                    <img src={product.imageUrl} alt={product.name} className="product-image" />
-                                    <div className="product-details">
-                                        <h3 className="product-name">{product.name}</h3>
-                                        <p className="product-bid">Current Bid: {product.currentBid}</p>
-                                        <p className="product-category">Category: {product.category}</p>
-                                        <p className="product-time">End Time: {product.endTime}</p>
+                            <h2>Bidded Products</h2>
+                            <div className="product-grid">
+                                {biddedProducts.map((product) => (
+                                    <div key={product.id} className="product-card">
+                                        <img src={product.imageUrl} alt={product.name} className="product-image" />
+                                        <div className="product-details">
+                                            <h3 className="product-name">{product.name}</h3>
+                                            <p className="product-bid">Current Bid: {product.currentBid}</p>
+                                            <p className="product-category">Category: {product.category}</p>
+                                            <p className="product-time">End Time: {product.endTime}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     {selectedProductType === 'winning' && winningBiddedProducts.length > 0 && (
                         <div>
-                        <h2>Winning Bidded Products</h2>
-                        <div className="product-grid">
-                            {winningBiddedProducts.map((product) => (
-                                <div key={product.id} className="product-card">
-                                    <img src={product.imageUrl} alt={product.name} className="product-image" />
-                                    <div className="product-details">
-                                        <h3 className="product-name">{product.name}</h3>
-                                        <p className="product-bid">Winning Bid: {product.currentBid}</p>
-                                        <p className="product-category">Category: {product.category}</p>
-                                        <p className="product-time">End Time: {product.endTime}</p>
+                            <h2>Winning Bidded Products</h2>
+                            <div className="product-grid">
+                                {winningBiddedProducts.map((product) => (
+                                    <div key={product.id} className="product-card">
+                                        <img src={product.imageUrl} alt={product.name} className="product-image" />
+                                        <div className="product-details">
+                                            <h3 className="product-name">{product.name}</h3>
+                                            <p className="product-bid">Winning Bid: {product.currentBid}</p>
+                                            <p className="product-category">Category: {product.category}</p>
+                                            <p className="product-time">End Time: {product.endTime}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
             </div>
-    
-        {openDialog && (
-        <div className="dialog-overlay">
-          <div className="dialog-container">
-            <h2>Change Password</h2>
-            <input
-              type="password"
-              placeholder="Current Password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="New Password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder="Re-enter New Password"
-              value={reEnterNewPassword}
-              onChange={(e) => setReEnterNewPassword(e.target.value)}
-              className={passwordError ? 'error' : ''}
-            />
-            {passwordRequirements.map((req, index) => (
-              <p key={index} className={req.satisfied ? 'password-requirement satisfied' : 'password-requirement'}>
-                {req.text}
-              </p>
-            ))}
-            {passwordError && <p className="error-message">{passwordError}</p>}
-            <div className="dialog-buttons">
-              <button onClick={handleCloseDialog}>Cancel</button>
-              <button onClick={handleSubmitPassword}>Submit</button>
-            </div>
-          </div>
+
+            <Dialog open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle>Change Password</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="Current Password"
+                        type="password"
+                        fullWidth
+                        margin="normal"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <TextField
+                        label="New Password"
+                        type="password"
+                        fullWidth
+                        margin="normal"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <TextField
+                        label="Re-enter New Password"
+                        type="password"
+                        fullWidth
+                        margin="normal"
+                        value={reEnterNewPassword}
+                        onChange={(e) => setReEnterNewPassword(e.target.value)}
+                    />
+                    {passwordError && <p className="error-message">{passwordError}</p>}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSubmitPassword} color="primary">
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
-      )}
-      </div>
     );
-    
 };
 
 export default Profile;
